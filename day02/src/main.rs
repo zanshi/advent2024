@@ -1,9 +1,9 @@
-use std::{fs::read_to_string, time::Instant};
+use std::time::Instant;
 
 fn part_one() {
     let start = Instant::now();
 
-    let input = read_to_string("./input.txt").unwrap();
+    let input = include_str!("../input.txt");
 
     let lines = input.lines();
 
@@ -46,7 +46,7 @@ fn part_one() {
 fn part_two() {
     let start = Instant::now();
 
-    let input = read_to_string("./input.txt").unwrap();
+    let input = include_str!("../input.txt");
 
     let lines = input.lines();
 

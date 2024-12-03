@@ -1,7 +1,5 @@
-use std::fs::read_to_string;
-
 pub fn part_one() -> i32 {
-    let input = read_to_string("./input.txt").unwrap();
+    let input = include_str!("../input.txt");
 
     let mut product = 0;
 
@@ -23,9 +21,9 @@ pub fn part_one() -> i32 {
 }
 
 pub fn part_two() -> i32 {
-    let input = read_to_string("./input.txt").unwrap();
+    let input = include_str!("../input.txt");
 
-    let mut input_slice = &input[..];
+    let mut input_slice = input;
 
     let mut product = 0;
 
