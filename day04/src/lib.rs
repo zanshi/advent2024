@@ -29,19 +29,22 @@ pub fn part_one() -> i32 {
         }
     }
 
+    let input = input.split('\n').collect::<String>();
+    let input = &input[..];
+
     // vertical
     {
         // up + down
-        for col in 0..140 {
-            for row in 0..(140 - 4) {
-                if (input.as_bytes()[col * 140 + row] == b'X'
-                    && input.as_bytes()[col * 140 + row + 1] == b'M'
-                    && input.as_bytes()[col * 140 + row + 2] == b'A'
-                    && input.as_bytes()[col * 140 + row + 3] == b'S')
-                    || (input.as_bytes()[col * 140 + row] == b'S'
-                        && input.as_bytes()[col * 140 + row + 1] == b'A'
-                        && input.as_bytes()[col * 140 + row + 2] == b'M'
-                        && input.as_bytes()[col * 140 + row + 3] == b'X')
+        for x in 0..140 {
+            for y in 0..(140 - 4) {
+                if (input.as_bytes()[y * 140 + x] == b'X'
+                    && input.as_bytes()[(y + 1) * 140 + x] == b'M'
+                    && input.as_bytes()[(y + 2) * 140 + x] == b'A'
+                    && input.as_bytes()[(y + 3) * 140 + x] == b'S')
+                    || (input.as_bytes()[y * 140 + x] == b'S'
+                        && input.as_bytes()[(y + 1) * 140 + x] == b'A'
+                        && input.as_bytes()[(y + 2) * 140 + x] == b'M'
+                        && input.as_bytes()[(y + 3) * 140 + x] == b'X')
                 {
                     count += 1;
                 }
@@ -51,32 +54,32 @@ pub fn part_one() -> i32 {
 
     // diagonal
     {
-        for col in 0..(140 - 4) {
-            for row in 0..(140 - 4) {
-                if (input.as_bytes()[col * 140 + row] == b'X'
-                    && input.as_bytes()[(col + 1) * 140 + row + 1] == b'M'
-                    && input.as_bytes()[(col + 2) * 140 + row + 2] == b'A'
-                    && input.as_bytes()[(col + 3) * 140 + row + 3] == b'S')
-                    || (input.as_bytes()[col * 140 + row] == b'S'
-                        && input.as_bytes()[(col + 1) * 140 + row + 1] == b'A'
-                        && input.as_bytes()[(col + 2) * 140 + row + 2] == b'M'
-                        && input.as_bytes()[(col + 3) * 140 + row + 3] == b'X')
+        for y in 0..(140 - 4) {
+            for x in 0..(140 - 4) {
+                if (input.as_bytes()[y * 140 + x] == b'X'
+                    && input.as_bytes()[(y + 1) * 140 + x + 1] == b'M'
+                    && input.as_bytes()[(y + 2) * 140 + x + 2] == b'A'
+                    && input.as_bytes()[(y + 3) * 140 + x + 3] == b'S')
+                    || (input.as_bytes()[y * 140 + x] == b'S'
+                        && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
+                        && input.as_bytes()[(y + 2) * 140 + x + 2] == b'M'
+                        && input.as_bytes()[(y + 3) * 140 + x + 3] == b'X')
                 {
                     count += 1;
                 }
             }
         }
 
-        for col in 4..140 {
-            for row in 0..(140 - 4) {
-                if (input.as_bytes()[col * 140 + row] == b'X'
-                    && input.as_bytes()[(col - 1) * 140 + row + 1] == b'M'
-                    && input.as_bytes()[(col - 2) * 140 + row + 2] == b'A'
-                    && input.as_bytes()[(col - 3) * 140 + row + 3] == b'S')
-                    || (input.as_bytes()[col * 140 + row] == b'S'
-                        && input.as_bytes()[(col - 1) * 140 + row + 1] == b'A'
-                        && input.as_bytes()[(col - 2) * 140 + row + 2] == b'M'
-                        && input.as_bytes()[(col - 3) * 140 + row + 3] == b'X')
+        for y in 0..(140 - 4) {
+            for x in 3..140 {
+                if (input.as_bytes()[y * 140 + x] == b'X'
+                    && input.as_bytes()[(y + 1) * 140 + x - 1] == b'M'
+                    && input.as_bytes()[(y + 2) * 140 + x - 2] == b'A'
+                    && input.as_bytes()[(y + 3) * 140 + x - 3] == b'S')
+                    || (input.as_bytes()[y * 140 + x] == b'S'
+                        && input.as_bytes()[(y + 1) * 140 + x - 1] == b'A'
+                        && input.as_bytes()[(y + 2) * 140 + x - 2] == b'M'
+                        && input.as_bytes()[(y + 3) * 140 + x - 3] == b'X')
                 {
                     count += 1;
                 }
