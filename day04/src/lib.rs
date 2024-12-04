@@ -35,8 +35,8 @@ pub fn part_one() -> i32 {
     // vertical
     {
         // up + down
-        for x in 0..140 {
-            for y in 0..(140 - 4) {
+        for y in 0..(140 - 3) {
+            for x in 0..140 {
                 if (input.as_bytes()[y * 140 + x] == b'X'
                     && input.as_bytes()[(y + 1) * 140 + x] == b'M'
                     && input.as_bytes()[(y + 2) * 140 + x] == b'A'
@@ -54,8 +54,8 @@ pub fn part_one() -> i32 {
 
     // diagonal
     {
-        for y in 0..(140 - 4) {
-            for x in 0..(140 - 4) {
+        for y in 0..(140 - 3) {
+            for x in 0..(140 - 3) {
                 if (input.as_bytes()[y * 140 + x] == b'X'
                     && input.as_bytes()[(y + 1) * 140 + x + 1] == b'M'
                     && input.as_bytes()[(y + 2) * 140 + x + 2] == b'A'
@@ -70,7 +70,7 @@ pub fn part_one() -> i32 {
             }
         }
 
-        for y in 0..(140 - 4) {
+        for y in 0..(140 - 3) {
             for x in 3..140 {
                 if (input.as_bytes()[y * 140 + x] == b'X'
                     && input.as_bytes()[(y + 1) * 140 + x - 1] == b'M'
@@ -91,7 +91,66 @@ pub fn part_one() -> i32 {
 }
 
 pub fn part_two() -> i32 {
-    let input = include_str!("../input.txt");
+    let input = include_str!("../input.txt").split('\n').collect::<String>();
+    let input = &input[..];
 
-    todo!()
+    let mut count = 0;
+
+    for y in 0..(140 - 2) {
+        for x in 0..(140 - 2) {
+            // M . M
+            // . A .
+            // S . S
+            if input.as_bytes()[y * 140 + x] == b'M'
+                && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
+                && input.as_bytes()[(y + 2) * 140 + x + 2] == b'S'
+                && input.as_bytes()[y * 140 + x + 2] == b'M'
+                && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
+                && input.as_bytes()[(y + 2) * 140 + x] == b'S'
+            {
+                count += 1;
+            }
+
+            // M . S
+            // . A .
+            // M . S
+            if input.as_bytes()[y * 140 + x] == b'M'
+                && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
+                && input.as_bytes()[(y + 2) * 140 + x + 2] == b'S'
+                && input.as_bytes()[y * 140 + x + 2] == b'S'
+                && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
+                && input.as_bytes()[(y + 2) * 140 + x] == b'M'
+            {
+                count += 1;
+            }
+
+            // S . M
+            // . A .
+            // S . M
+            if input.as_bytes()[y * 140 + x] == b'S'
+                && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
+                && input.as_bytes()[(y + 2) * 140 + x + 2] == b'M'
+                && input.as_bytes()[y * 140 + x + 2] == b'M'
+                && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
+                && input.as_bytes()[(y + 2) * 140 + x] == b'S'
+            {
+                count += 1;
+            }
+
+            // S . S
+            // . A .
+            // M . M
+            if input.as_bytes()[y * 140 + x] == b'S'
+                && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
+                && input.as_bytes()[(y + 2) * 140 + x + 2] == b'M'
+                && input.as_bytes()[y * 140 + x + 2] == b'S'
+                && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
+                && input.as_bytes()[(y + 2) * 140 + x] == b'M'
+            {
+                count += 1;
+            }
+        }
+    }
+
+    count
 }
