@@ -13,38 +13,45 @@ pub fn part_one() -> i32 {
 
     // find all instances of XMAS
 
+    let input = input.split('\n').collect::<String>();
+    let input = input.as_bytes();
+
     let mut count = 0;
 
     // horizontal
     {
-        let lines = input.lines();
+        for y in 0..140 {
+            let line = &input[y * 140..(y * 140 + 140)];
 
-        for line in lines {
-            // forwards + backwards
-            for window in line.as_bytes().windows(4) {
-                if window == b"XMAS" || window == b"SAMX" {
+            for window in line.windows(4) {
+                if (window[0] == b'X'
+                    && window[1] == b'M'
+                    && window[2] == b'A'
+                    && window[3] == b'S')
+                    || (window[0] == b'S'
+                        && window[1] == b'A'
+                        && window[2] == b'M'
+                        && window[3] == b'X')
+                {
                     count += 1;
                 }
             }
         }
     }
 
-    let input = input.split('\n').collect::<String>();
-    let input = &input[..];
-
     // vertical
     {
         // up + down
         for y in 0..(140 - 3) {
             for x in 0..140 {
-                if (input.as_bytes()[y * 140 + x] == b'X'
-                    && input.as_bytes()[(y + 1) * 140 + x] == b'M'
-                    && input.as_bytes()[(y + 2) * 140 + x] == b'A'
-                    && input.as_bytes()[(y + 3) * 140 + x] == b'S')
-                    || (input.as_bytes()[y * 140 + x] == b'S'
-                        && input.as_bytes()[(y + 1) * 140 + x] == b'A'
-                        && input.as_bytes()[(y + 2) * 140 + x] == b'M'
-                        && input.as_bytes()[(y + 3) * 140 + x] == b'X')
+                if (input[y * 140 + x] == b'X'
+                    && input[(y + 1) * 140 + x] == b'M'
+                    && input[(y + 2) * 140 + x] == b'A'
+                    && input[(y + 3) * 140 + x] == b'S')
+                    || (input[y * 140 + x] == b'S'
+                        && input[(y + 1) * 140 + x] == b'A'
+                        && input[(y + 2) * 140 + x] == b'M'
+                        && input[(y + 3) * 140 + x] == b'X')
                 {
                     count += 1;
                 }
@@ -56,14 +63,14 @@ pub fn part_one() -> i32 {
     {
         for y in 0..(140 - 3) {
             for x in 0..(140 - 3) {
-                if (input.as_bytes()[y * 140 + x] == b'X'
-                    && input.as_bytes()[(y + 1) * 140 + x + 1] == b'M'
-                    && input.as_bytes()[(y + 2) * 140 + x + 2] == b'A'
-                    && input.as_bytes()[(y + 3) * 140 + x + 3] == b'S')
-                    || (input.as_bytes()[y * 140 + x] == b'S'
-                        && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
-                        && input.as_bytes()[(y + 2) * 140 + x + 2] == b'M'
-                        && input.as_bytes()[(y + 3) * 140 + x + 3] == b'X')
+                if (input[y * 140 + x] == b'X'
+                    && input[(y + 1) * 140 + x + 1] == b'M'
+                    && input[(y + 2) * 140 + x + 2] == b'A'
+                    && input[(y + 3) * 140 + x + 3] == b'S')
+                    || (input[y * 140 + x] == b'S'
+                        && input[(y + 1) * 140 + x + 1] == b'A'
+                        && input[(y + 2) * 140 + x + 2] == b'M'
+                        && input[(y + 3) * 140 + x + 3] == b'X')
                 {
                     count += 1;
                 }
@@ -72,14 +79,14 @@ pub fn part_one() -> i32 {
 
         for y in 0..(140 - 3) {
             for x in 3..140 {
-                if (input.as_bytes()[y * 140 + x] == b'X'
-                    && input.as_bytes()[(y + 1) * 140 + x - 1] == b'M'
-                    && input.as_bytes()[(y + 2) * 140 + x - 2] == b'A'
-                    && input.as_bytes()[(y + 3) * 140 + x - 3] == b'S')
-                    || (input.as_bytes()[y * 140 + x] == b'S'
-                        && input.as_bytes()[(y + 1) * 140 + x - 1] == b'A'
-                        && input.as_bytes()[(y + 2) * 140 + x - 2] == b'M'
-                        && input.as_bytes()[(y + 3) * 140 + x - 3] == b'X')
+                if (input[y * 140 + x] == b'X'
+                    && input[(y + 1) * 140 + x - 1] == b'M'
+                    && input[(y + 2) * 140 + x - 2] == b'A'
+                    && input[(y + 3) * 140 + x - 3] == b'S')
+                    || (input[y * 140 + x] == b'S'
+                        && input[(y + 1) * 140 + x - 1] == b'A'
+                        && input[(y + 2) * 140 + x - 2] == b'M'
+                        && input[(y + 3) * 140 + x - 3] == b'X')
                 {
                     count += 1;
                 }
@@ -92,47 +99,24 @@ pub fn part_one() -> i32 {
 
 pub fn part_two() -> i32 {
     let input = include_str!("../input.txt").split('\n').collect::<String>();
-    let input = &input[..];
+    let input = input.as_bytes();
 
     let mut count = 0;
 
     for y in 0..(140 - 2) {
         for x in 0..(140 - 2) {
+            if input[(y + 1) * 140 + x + 1] != b'A' {
+                continue;
+            }
+
             // M . M
             // . A .
             // S . S
-            if input.as_bytes()[y * 140 + x] == b'M'
-                && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
-                && input.as_bytes()[(y + 2) * 140 + x + 2] == b'S'
-                && input.as_bytes()[y * 140 + x + 2] == b'M'
-                && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
-                && input.as_bytes()[(y + 2) * 140 + x] == b'S'
-            {
-                count += 1;
-            }
-
-            // M . S
-            // . A .
-            // M . S
-            if input.as_bytes()[y * 140 + x] == b'M'
-                && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
-                && input.as_bytes()[(y + 2) * 140 + x + 2] == b'S'
-                && input.as_bytes()[y * 140 + x + 2] == b'S'
-                && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
-                && input.as_bytes()[(y + 2) * 140 + x] == b'M'
-            {
-                count += 1;
-            }
-
-            // S . M
-            // . A .
-            // S . M
-            if input.as_bytes()[y * 140 + x] == b'S'
-                && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
-                && input.as_bytes()[(y + 2) * 140 + x + 2] == b'M'
-                && input.as_bytes()[y * 140 + x + 2] == b'M'
-                && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
-                && input.as_bytes()[(y + 2) * 140 + x] == b'S'
+            if input[y * 140 + x] == b'M'
+                && input[(y + 1) * 140 + x + 1] == b'A'
+                && input[(y + 2) * 140 + x + 2] == b'S'
+                && input[y * 140 + x + 2] == b'M'
+                && input[(y + 2) * 140 + x] == b'S'
             {
                 count += 1;
             }
@@ -140,12 +124,35 @@ pub fn part_two() -> i32 {
             // S . S
             // . A .
             // M . M
-            if input.as_bytes()[y * 140 + x] == b'S'
-                && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
-                && input.as_bytes()[(y + 2) * 140 + x + 2] == b'M'
-                && input.as_bytes()[y * 140 + x + 2] == b'S'
-                && input.as_bytes()[(y + 1) * 140 + x + 1] == b'A'
-                && input.as_bytes()[(y + 2) * 140 + x] == b'M'
+            if input[y * 140 + x] == b'S'
+                && input[(y + 1) * 140 + x + 1] == b'A'
+                && input[(y + 2) * 140 + x + 2] == b'M'
+                && input[y * 140 + x + 2] == b'S'
+                && input[(y + 2) * 140 + x] == b'M'
+            {
+                count += 1;
+            }
+
+            // M . S
+            // . A .
+            // M . S
+            if input[y * 140 + x] == b'M'
+                && input[(y + 1) * 140 + x + 1] == b'A'
+                && input[(y + 2) * 140 + x + 2] == b'S'
+                && input[y * 140 + x + 2] == b'S'
+                && input[(y + 2) * 140 + x] == b'M'
+            {
+                count += 1;
+            }
+
+            // S . M
+            // . A .
+            // S . M
+            if input[y * 140 + x] == b'S'
+                && input[(y + 1) * 140 + x + 1] == b'A'
+                && input[(y + 2) * 140 + x + 2] == b'M'
+                && input[y * 140 + x + 2] == b'M'
+                && input[(y + 2) * 140 + x] == b'S'
             {
                 count += 1;
             }
