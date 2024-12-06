@@ -119,7 +119,7 @@ pub fn part_two() -> i32 {
     }
 
     struct Grid<'a> {
-        data: &'a [u8],
+        input: &'a [u8],
         direction: GuardDirection,
         visited_map: &'a mut [(u8, u8)],
         x: i32,
@@ -131,12 +131,18 @@ pub fn part_two() -> i32 {
     }
 
     impl<'a> Grid<'a> {
-        fn new(data: &'a mut [u8], visited_map: &'a mut [(u8, u8)], x: i32, y: i32) -> Self {
-            visited_map[index(x, y)] = (1, GuardDirection::Up as u8);
+        fn new(
+            input: &'a mut [u8],
+            visited_map: &'a mut [(u8, u8)],
+            x: i32,
+            y: i32,
+            start_direction: GuardDirection,
+        ) -> Self {
+            visited_map[index(x, y)] = (1, start_direction as u8);
 
             Self {
-                data,
-                direction: GuardDirection::Up,
+                input,
+                direction: start_direction,
                 visited_map,
                 x,
                 y,
@@ -166,12 +172,11 @@ pub fn part_two() -> i32 {
 
             let idx = index(next_coord.0, next_coord.1);
 
-            let cell = self.data[idx];
+            let cell = self.input[idx];
 
             match cell {
                 b'.' | b'^' => {
                     self.visited_map[idx].0 = 1;
-                    self.visited_map[idx].1 |= self.direction as u8;
 
                     self.x = next_coord.0;
                     self.y = next_coord.1;
@@ -207,7 +212,7 @@ pub fn part_two() -> i32 {
 
             let idx = index(next_coord.0, next_coord.1);
 
-            let cell = self.data[idx];
+            let cell = self.input[idx];
 
             match cell {
                 b'.' | b'^' => {
@@ -237,40 +242,43 @@ pub fn part_two() -> i32 {
         }
     }
 
-    let mut visible_map: [(u8, u8); (GRID_SIDE * GRID_SIDE) as usize] =
+    let mut visited_map: [(u8, u8); (GRID_SIDE * GRID_SIDE) as usize] =
         [(0, 0); (GRID_SIDE * GRID_SIDE) as usize];
 
     let start_index = input.iter().position(|x| *x == b'^').unwrap() as i32;
 
-    let x = start_index % GRID_SIDE;
-    let y = start_index / GRID_SIDE;
+    let mut x = start_index % GRID_SIDE;
+    let mut y = start_index / GRID_SIDE;
+    let mut start_direction = GuardDirection::Up;
 
-    let mut baseline_grid = Grid::new(input, &mut visible_map, x, y);
+    let mut baseline_visited_map: [(u8, u8); (GRID_SIDE * GRID_SIDE) as usize] =
+        [(0, 0); (GRID_SIDE * GRID_SIDE) as usize];
+    let mut baseline_grid = Grid::new(input, &mut baseline_visited_map, x, y, start_direction);
     let _ = baseline_grid.walk();
 
-    let mut obstruction_positions = 0;
+    baseline_visited_map[start_index as usize] = (0, 0);
 
-    let visited_cell_indices = visible_map
+    let visited_cell_indices = baseline_visited_map
         .iter()
         .enumerate()
         .filter(|(_, (v, _))| *v == 1)
-        .map(|(i, _)| i)
-        .collect::<Vec<usize>>();
+        .map(|(i, _)| i);
+
+    let mut obstruction_positions = 0;
 
     for i in visited_cell_indices {
-        if i == start_index as usize {
-            continue;
-        }
-
         input[i] = b'#';
-        let mut grid = Grid::new(input, &mut visible_map, x, y);
+        let mut grid = Grid::new(input, &mut visited_map, x, y, start_direction);
 
         if grid.walking_in_loop() {
+            // x = grid.x;
+            // y = grid.y;
+            // start_direction = grid.direction;
+
             obstruction_positions += 1;
         }
 
-        visible_map.fill((0, 0));
-
+        visited_map.fill((0, 0));
         input[i] = b'.';
     }
 
