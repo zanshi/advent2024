@@ -116,6 +116,7 @@ pub fn part_two() -> i32 {
         data: &'a [u8],
         direction: GuardDirection,
         visited_map: Vec<(u8, Vec<GuardDirection>)>,
+        obstruction_index: usize,
         x: i32,
         y: i32,
     }
@@ -125,14 +126,14 @@ pub fn part_two() -> i32 {
     }
 
     impl<'a> Grid<'a> {
-        fn new(data: &'a [u8]) -> Self {
+        fn new(data: &'a [u8], obstruction_index: usize) -> Self {
             let guard_index = data.iter().position(|x| *x == b'^').unwrap() as i32;
 
             let x = guard_index % GRID_SIDE;
             let y = guard_index / GRID_SIDE;
 
             let mut visited_map = Vec::new();
-            visited_map.resize((GRID_SIDE * GRID_SIDE) as usize, (0, Vec::new()));
+            visited_map.resize((GRID_SIDE * GRID_SIDE) as usize, (0, Vec::with_capacity(4)));
             visited_map[index(x, y)] = (1, vec![GuardDirection::Up]);
 
             Self {
@@ -141,6 +142,7 @@ pub fn part_two() -> i32 {
                 visited_map,
                 x,
                 y,
+                obstruction_index,
             }
         }
 
@@ -162,6 +164,18 @@ pub fn part_two() -> i32 {
             }
 
             let idx = index(next_coord.0, next_coord.1);
+
+            if idx == self.obstruction_index {
+                match self.direction {
+                    GuardDirection::Up => self.direction = GuardDirection::Right,
+                    GuardDirection::Right => self.direction = GuardDirection::Down,
+                    GuardDirection::Down => self.direction = GuardDirection::Left,
+                    GuardDirection::Left => self.direction = GuardDirection::Up,
+                }
+
+                return self.walking_in_loop();
+            }
+
             let cell = self.data[idx];
 
             match cell {
@@ -179,19 +193,12 @@ pub fn part_two() -> i32 {
                     self.x = next_coord.0;
                     self.y = next_coord.1;
                 }
-                b'#' => {
-                    match self.direction {
-                        GuardDirection::Up => self.direction = GuardDirection::Right,
-                        GuardDirection::Right => self.direction = GuardDirection::Down,
-                        GuardDirection::Down => self.direction = GuardDirection::Left,
-                        GuardDirection::Left => self.direction = GuardDirection::Up,
-                    }
-                    if self.visited_map[idx].0 == 1
-                        && self.visited_map[idx].1.contains(&self.direction)
-                    {
-                        return true;
-                    }
-                }
+                b'#' => match self.direction {
+                    GuardDirection::Up => self.direction = GuardDirection::Right,
+                    GuardDirection::Right => self.direction = GuardDirection::Down,
+                    GuardDirection::Down => self.direction = GuardDirection::Left,
+                    GuardDirection::Left => self.direction = GuardDirection::Up,
+                },
                 _ => (),
             }
 
@@ -205,10 +212,8 @@ pub fn part_two() -> i32 {
         if input[i] == b'#' || input[i] == b'^' {
             continue;
         }
-        let mut input = input.to_owned();
-        input[i] = b'#';
 
-        let mut grid = Grid::new(&input);
+        let mut grid = Grid::new(input, i);
 
         if grid.walking_in_loop() {
             obstruction_positions += 1;
