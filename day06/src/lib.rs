@@ -36,10 +36,13 @@ pub fn part_one() -> i32 {
             let x = guard_index % GRID_SIDE;
             let y = guard_index / GRID_SIDE;
 
+            let mut visited_map = [0; (GRID_SIDE * GRID_SIDE) as usize];
+            visited_map[index(x, y)] = 1;
+
             Self {
                 data,
                 direction: GuardDirection::Up,
-                visited_map: [0; (GRID_SIDE * GRID_SIDE) as usize],
+                visited_map,
                 x,
                 y,
             }
