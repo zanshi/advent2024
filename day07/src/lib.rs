@@ -17,10 +17,10 @@ fn increment_bitset(bits: &mut [bool]) -> bool {
     !carry
 }
 
-fn increment_ternary(operator: &mut [u8]) -> bool {
+fn increment_ternary(operators: &mut [u8]) -> bool {
     let mut carry = true;
 
-    for bit in operator.iter_mut() {
+    for bit in operators.iter_mut() {
         if carry {
             if *bit == 2 {
                 *bit = 0;
@@ -33,6 +33,8 @@ fn increment_ternary(operator: &mut [u8]) -> bool {
                 carry = false;
                 break;
             }
+        } else {
+            break;
         }
     }
 
@@ -59,19 +61,20 @@ pub fn part_one() -> i64 {
         let mut bits = vec![false; numbers.len() - 1];
 
         loop {
-            let mut result = numbers[0];
-
-            for (number, bit) in numbers[1..].iter().zip(bits.iter()) {
-                if *bit {
-                    result *= number;
-                } else {
-                    result += number;
-                }
-
-                if result > test_value {
-                    break;
-                }
-            }
+            let result =
+                numbers[1..]
+                    .iter()
+                    .zip(bits.iter())
+                    .fold(
+                        numbers[0],
+                        |acc, (number, bit)| {
+                            if *bit {
+                                acc * number
+                            } else {
+                                acc + number
+                            }
+                        },
+                    );
 
             if result == test_value {
                 total_calibration_result += test_value;
@@ -109,19 +112,20 @@ pub fn part_two() -> i64 {
         let mut bits = vec![false; numbers.len() - 1];
 
         loop {
-            let mut result = numbers[0];
-
-            for (number, bit) in numbers[1..].iter().zip(bits.iter()) {
-                if *bit {
-                    result *= number;
-                } else {
-                    result += number;
-                }
-
-                if result > test_value {
-                    break;
-                }
-            }
+            let result =
+                numbers[1..]
+                    .iter()
+                    .zip(bits.iter())
+                    .fold(
+                        numbers[0],
+                        |acc, (number, bit)| {
+                            if *bit {
+                                acc * number
+                            } else {
+                                acc + number
+                            }
+                        },
+                    );
 
             if result == test_value {
                 total_calibration_result += test_value;
@@ -140,29 +144,26 @@ pub fn part_two() -> i64 {
         // 2 == concat
 
         loop {
-            let mut result = numbers[0];
-
-            for (number, operator) in numbers[1..].iter().zip(operators.iter()) {
-                if *operator == 0 {
-                    result += number;
-                } else if *operator == 1 {
-                    result *= number;
-                } else if *operator == 2 {
-                    result = if *number >= 100 {
-                        result * 1000 + number
+            let result = numbers[1..].iter().zip(operators.iter()).try_fold(
+                numbers[0],
+                |acc, (number, operator)| {
+                    let res = if *operator == 0 {
+                        acc + number
+                    } else if *operator == 1 {
+                        acc * number
+                    } else if *number >= 100 {
+                        acc * 1000 + number
                     } else if *number >= 10 {
-                        result * 100 + number
+                        acc * 100 + number
                     } else {
-                        result * 10 + number
+                        acc * 10 + number
                     };
-                }
 
-                if result > test_value {
-                    break;
-                }
-            }
+                    (res <= test_value).then_some(res)
+                },
+            );
 
-            if result == test_value {
+            if result == Some(test_value) {
                 total_calibration_result += test_value;
 
                 continue 'line_loop;
