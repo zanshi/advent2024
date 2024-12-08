@@ -1,33 +1,34 @@
-use std::collections::{HashMap, HashSet};
+use rustc_hash::{FxBuildHasher, FxHashMap as HashMap, FxHashSet as HashSet};
 
 use glam::IVec2;
 
 pub fn part_one() -> i64 {
     let input = include_str!("../input.txt");
-    let width = input.find('\n').unwrap();
+    let width = input.find('\n').unwrap() as u32;
     let input = input.split('\n').collect::<String>();
     let input = input.as_bytes();
 
-    let index_to_coord = |index: usize| {
+    let index_to_coord = |index: u32| {
         let x = index % width;
         let y = index / width;
 
         IVec2::new(x as i32, y as i32)
     };
 
-    let coord_to_index = |p: IVec2| (p.y * width as i32 + p.x) as usize;
+    let coord_to_index = |p: IVec2| (p.y * width as i32 + p.x) as u32;
 
-    let mut antenna_map = HashMap::new();
+    let mut antenna_map = HashMap::with_capacity_and_hasher(20, FxBuildHasher);
     for (index, c) in input.iter().enumerate().filter(|(_, c)| **c != b'.') {
         antenna_map
             .entry(*c)
-            .and_modify(|e: &mut Vec<usize>| {
-                e.push(index);
+            .and_modify(|e: &mut Vec<u32>| {
+                e.push(index as u32);
             })
-            .or_insert(vec![index]);
+            .or_insert(vec![index as u32]);
     }
 
-    let mut unique_anti_nodes: HashSet<usize> = HashSet::new();
+    let mut unique_anti_nodes: HashSet<u32> =
+        HashSet::with_capacity_and_hasher(2048, FxBuildHasher);
 
     for antenna_indices in antenna_map.values() {
         for i in 0..antenna_indices.len() {
@@ -67,30 +68,31 @@ pub fn part_one() -> i64 {
 
 pub fn part_two() -> i64 {
     let input = include_str!("../input.txt");
-    let width = input.find('\n').unwrap();
+    let width = input.find('\n').unwrap() as u32;
     let input = input.split('\n').collect::<String>();
     let input = input.as_bytes();
 
-    let index_to_coord = |index: usize| {
+    let index_to_coord = |index: u32| {
         let x = index % width;
         let y = index / width;
 
         IVec2::new(x as i32, y as i32)
     };
 
-    let coord_to_index = |p: IVec2| (p.y * width as i32 + p.x) as usize;
+    let coord_to_index = |p: IVec2| (p.y * width as i32 + p.x) as u32;
 
-    let mut antenna_map = HashMap::new();
+    let mut antenna_map = HashMap::with_capacity_and_hasher(20, FxBuildHasher);
     for (index, c) in input.iter().enumerate().filter(|(_, c)| **c != b'.') {
         antenna_map
             .entry(*c)
-            .and_modify(|e: &mut Vec<usize>| {
-                e.push(index);
+            .and_modify(|e: &mut Vec<u32>| {
+                e.push(index as u32);
             })
-            .or_insert(vec![index]);
+            .or_insert(vec![index as u32]);
     }
 
-    let mut unique_anti_nodes: HashSet<usize> = HashSet::new();
+    let mut unique_anti_nodes: HashSet<u32> =
+        HashSet::with_capacity_and_hasher(2048, FxBuildHasher);
 
     for antenna_indices in antenna_map.values() {
         for i in 0..antenna_indices.len() {

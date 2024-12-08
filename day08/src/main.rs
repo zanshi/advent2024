@@ -17,5 +17,5 @@ fn main() {
     let elapsed = start.elapsed().as_micros();
     println!("Part Two: {out}, time: {elapsed} us");
 
-    // assert_eq!(out, 333027885676693);
+    assert_eq!(out, 1184);
 }
