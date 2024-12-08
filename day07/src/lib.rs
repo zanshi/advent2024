@@ -17,6 +17,28 @@ fn increment_bitset(bits: &mut [bool]) -> bool {
     !carry
 }
 
+fn increment_ternary(operator: &mut [u8]) -> bool {
+    let mut carry = true;
+
+    for bit in operator.iter_mut() {
+        if carry {
+            if *bit == 2 {
+                *bit = 0;
+                carry = true;
+            } else if *bit == 1 {
+                *bit = 2;
+                carry = false;
+            } else {
+                *bit = 1;
+                carry = false;
+                break;
+            }
+        }
+    }
+
+    !carry
+}
+
 pub fn part_one() -> i64 {
     let input = include_str!("../input.txt");
 
@@ -69,9 +91,6 @@ pub fn part_one() -> i64 {
 pub fn part_two() -> i64 {
     let input = include_str!("../input.txt");
 
-    // 370631131361420 - wrong, too high
-    // 333027885676693
-
     let mut total_calibration_result = 0;
 
     'line_loop: for line in input.lines() {
@@ -120,28 +139,6 @@ pub fn part_two() -> i64 {
         // 1 == mul
         // 2 == concat
 
-        fn increment_ternary(operator: &mut [u8]) -> bool {
-            let mut carry = true;
-
-            for bit in operator.iter_mut() {
-                if carry {
-                    if *bit == 2 {
-                        *bit = 0;
-                        carry = true;
-                    } else if *bit == 1 {
-                        *bit = 2;
-                        carry = false;
-                    } else {
-                        *bit = 1;
-                        carry = false;
-                        break;
-                    }
-                }
-            }
-
-            !carry
-        }
-
         loop {
             let mut result = numbers[0];
 
@@ -151,9 +148,13 @@ pub fn part_two() -> i64 {
                 } else if *operator == 1 {
                     result *= number;
                 } else if *operator == 2 {
-                    result = (result.to_string() + &number.to_string())
-                        .parse::<i64>()
-                        .unwrap();
+                    result = if *number >= 100 {
+                        result * 1000 + number
+                    } else if *number >= 10 {
+                        result * 100 + number
+                    } else {
+                        result * 10 + number
+                    };
                 }
 
                 if result > test_value {
