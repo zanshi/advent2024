@@ -10,7 +10,7 @@ fn main() {
 
     println!("Part One: {out}, time: {elapsed} us");
 
-    // assert_eq!(out, 381);
+    assert_eq!(out, 6607511583593);
 
     let start = Instant::now();
     let out = part_two();

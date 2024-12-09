@@ -8,6 +8,8 @@ pub fn part_one() -> i64 {
     let input = input.as_bytes();
 
     // 6604945869790 - wrong too low
+    // 7006976161161164811 - too high
+    // 6607511583593 - correct
 
     let mut filesystem: Vec<i32> = Vec::with_capacity(100000);
 
@@ -18,34 +20,38 @@ pub fn part_one() -> i64 {
             id += 1;
             entry
         } else {
-            255 // mark free space as 255
+            i32::MAX // mark free space as i32::MAX
         };
 
         filesystem.resize(filesystem.len() + digit as usize, entry);
     }
 
-    let mut free_space_cursor = filesystem.iter().position(|x| *x == 255).unwrap();
-    let mut file_block_cursor =
-        (filesystem.len() - 1) - filesystem.iter().rev().position(|x| *x != 255).unwrap();
+    let mut free_space_cursor = filesystem.iter().position(|x| *x == i32::MAX).unwrap();
+    let mut file_block_cursor = (filesystem.len() - 1)
+        - filesystem
+            .iter()
+            .rev()
+            .position(|x| *x != i32::MAX)
+            .unwrap();
 
     while free_space_cursor < file_block_cursor {
-        if filesystem[file_block_cursor] != 255 {
+        if filesystem[file_block_cursor] != i32::MAX {
             filesystem[free_space_cursor] = filesystem[file_block_cursor];
-            filesystem[file_block_cursor] = 255;
+            filesystem[file_block_cursor] = i32::MAX;
         }
 
-        while filesystem[free_space_cursor] != 255 && free_space_cursor < file_block_cursor {
+        while filesystem[free_space_cursor] != i32::MAX && free_space_cursor < file_block_cursor {
             free_space_cursor += 1;
         }
 
-        while filesystem[file_block_cursor] == 255 && free_space_cursor < file_block_cursor {
+        while filesystem[file_block_cursor] == i32::MAX && free_space_cursor < file_block_cursor {
             file_block_cursor -= 1;
         }
 
         // println!("cursors: {}, {}", file_block_cursor, free_space_cursor);
         // println!();
         // for (i, entry) in filesystem.iter().enumerate() {
-        //     if *entry == 255 {
+        //     if *entry == i32::MAX {
         //         if i == free_space_cursor {
         //             print!("(.)");
         //         } else {
@@ -62,10 +68,29 @@ pub fn part_one() -> i64 {
         // println!();
     }
 
+    // println!("cursors: {}, {}", file_block_cursor, free_space_cursor);
+    // println!();
+    // for (i, entry) in filesystem.iter().enumerate() {
+    //     if *entry == i32::MAX {
+    //         if i == free_space_cursor {
+    //             print!("(.)");
+    //         } else {
+    //             print!(".");
+    //         }
+    //     } else {
+    //         if i == file_block_cursor {
+    //             print!("({})", entry);
+    //         } else {
+    //             print!("{}", entry);
+    //         }
+    //     }
+    // }
+    // println!();
+
     let checksum = filesystem
         .iter()
         .enumerate()
-        .filter(|(_, x)| **x != 255)
+        .filter(|(_, x)| **x != i32::MAX)
         .fold(0, |acc, (i, x)| acc + (i * (*x as usize)));
 
     checksum as i64
