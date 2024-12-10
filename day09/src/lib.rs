@@ -54,8 +54,7 @@ fn naive_defrag(fs: &mut [i32]) {
 
     while free_space_cursor < file_block_cursor {
         if fs[file_block_cursor] != i32::MAX {
-            fs[free_space_cursor] = fs[file_block_cursor];
-            fs[file_block_cursor] = i32::MAX;
+            fs.swap(file_block_cursor, free_space_cursor);
         }
 
         while fs[free_space_cursor] != i32::MAX && free_space_cursor < file_block_cursor {
@@ -133,8 +132,7 @@ fn better_defrag(fs: &mut [i32]) {
             if free_space_block_range.len() >= file_block_range.len() {
                 // found valid block
                 for (i, file_block_index) in file_block_range.clone().enumerate() {
-                    fs[free_space_block_range.start + i] = fs[file_block_index];
-                    fs[file_block_index] = i32::MAX;
+                    fs.swap(free_space_block_range.start + i, file_block_index);
                 }
 
                 break;
