@@ -66,21 +66,43 @@ impl Map<'_> {
         0
     }
 
-    fn viz(&self, pos: (i32, i32)) {
-        println!();
-        for y in 0..self.width {
-            println!();
-            for x in 0..self.width {
-                if pos.0 == x as i32 && pos.1 == y as i32 {
-                    print!("*");
-                } else {
-                    print!("{}", self.get(self.coord_to_index((x as i32, y as i32))));
-                }
-            }
+    fn trail_head_rating(&self, (x, y): (i32, i32), prev_height: i32) -> i32 {
+        if x < 0 || x >= self.width as i32 || y < 0 || y >= self.width as i32 {
+            return 0;
         }
-        println!();
-        println!();
+
+        let index = self.coord_to_index((x, y));
+        let height = self.get(index) as i32;
+
+        if height == (prev_height + 1) {
+            if height == 9 {
+                return 1;
+            }
+
+            return self.trail_head_rating((x + DIRECTIONS[0].0, y + DIRECTIONS[0].1), height)
+                + self.trail_head_rating((x + DIRECTIONS[1].0, y + DIRECTIONS[1].1), height)
+                + self.trail_head_rating((x + DIRECTIONS[2].0, y + DIRECTIONS[2].1), height)
+                + self.trail_head_rating((x + DIRECTIONS[3].0, y + DIRECTIONS[3].1), height);
+        }
+
+        0
     }
+
+    // fn viz(&self, pos: (i32, i32)) {
+    //     println!();
+    //     for y in 0..self.width {
+    //         println!();
+    //         for x in 0..self.width {
+    //             if pos.0 == x as i32 && pos.1 == y as i32 {
+    //                 print!("*");
+    //             } else {
+    //                 print!("{}", self.get(self.coord_to_index((x as i32, y as i32))));
+    //             }
+    //         }
+    //     }
+    //     println!();
+    //     println!();
+    // }
 }
 
 pub fn part_one() -> i64 {
@@ -113,7 +135,24 @@ pub fn part_one() -> i64 {
 
 pub fn part_two() -> i64 {
     let input = include_str!("../input.txt");
+    let width = input.find('\n').unwrap();
+    let input = input.split('\n').collect::<String>();
     let input = input.as_bytes();
 
-    0
+    let map = Map { input, width };
+
+    let mut total_trail_head_score = 0;
+
+    for (i, start) in input.iter().enumerate() {
+        let start = start - 48;
+        if start == 0 {
+            let coord = map.index_to_coord(i);
+
+            let score = map.trail_head_rating(coord, -1);
+
+            total_trail_head_score += score;
+        }
+    }
+
+    total_trail_head_score as i64
 }
