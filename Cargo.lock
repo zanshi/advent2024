@@ -226,6 +226,13 @@ name = "day09"
 version = "0.1.0"
 dependencies = [
  "criterion",
+]
+
+[[package]]
+name = "day10"
+version = "0.1.0"
+dependencies = [
+ "criterion",
  "rustc-hash",
 ]
 
