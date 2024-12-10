@@ -1,12 +1,14 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use std::{collections::HashMap, fs::read_to_string, hint::black_box};
+use std::hint::black_box;
 
-// use day03::part_one;
-// use day03::part_two;
+use day10::part_one;
+use day10::part_two;
 
 fn criterion_benchmark(c: &mut Criterion) {
-    // c.bench_function("day03 part1", |b| b.iter(|| part_one()));
-    // c.bench_function("day03 part2", |b| b.iter(|| part_two()));
+    let input = include_str!("../input.txt");
+
+    c.bench_function("day10 part1", |b| b.iter(|| part_one(black_box(input))));
+    c.bench_function("day10 part2", |b| b.iter(|| part_two(black_box(input))));
 }
 
 criterion_group!(benches, criterion_benchmark);
