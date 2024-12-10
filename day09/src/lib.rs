@@ -1,3 +1,7 @@
+use std::arch::x86_64::{
+    __m256i, _mm256_cmpeq_epi32, _mm256_load_si256, _mm256_movemask_ps, _mm256_set1_epi32,
+};
+
 pub fn part_one() -> i64 {
     let input = include_str!("../input.txt");
     let input = input.as_bytes();
@@ -64,6 +68,30 @@ fn naive_defrag(fs: &mut [i32]) {
     }
 }
 
+#[target_feature(enable = "avx2")]
+unsafe fn find_first_max_simd(slice: &[i32], mut cursor: usize, end: usize) -> usize {
+    let max_vector = _mm256_set1_epi32(i32::MAX);
+
+    while cursor + 8 <= end {
+        let data = _mm256_load_si256(slice[cursor..].as_ptr() as *const __m256i);
+
+        let res = _mm256_cmpeq_epi32(max_vector, data);
+
+        let mask = _mm256_movemask_ps(std::mem::transmute::<
+            std::arch::x86_64::__m256i,
+            std::arch::x86_64::__m256,
+        >(res));
+
+        if mask == 0 {
+            cursor += 8;
+        } else {
+            break;
+        }
+    }
+
+    cursor
+}
+
 fn better_defrag(fs: &mut [i32]) {
     let mut free_space_cursor = fs.iter().position(|x| *x == i32::MAX).unwrap();
     let mut file_block_cursor =
@@ -114,6 +142,24 @@ fn better_defrag(fs: &mut [i32]) {
                 find_free_space_cursor += free_space_block_range.len();
 
                 // block too small, try to find another
+
+                // if let Some(next) = fs[find_free_space_cursor..]
+                //     .iter()
+                //     .position(|x| *x == i32::MAX)
+                // {
+                //     find_free_space_cursor += next;
+                // }
+
+                find_free_space_cursor =
+                    unsafe { find_first_max_simd(fs, find_free_space_cursor, file_block_cursor) };
+
+                // while fs[find_free_space_cursor..find_free_space_cursor + 8]
+                //     .iter()
+                //     .all(|x| *x != i32::MAX)
+                // {
+                //     find_free_space_cursor += 8;
+                // }
+
                 while fs[find_free_space_cursor] != i32::MAX
                     && find_free_space_cursor < file_block_cursor
                 {
