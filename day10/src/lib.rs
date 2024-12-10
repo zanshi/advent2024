@@ -1,3 +1,5 @@
+const DIRECTIONS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
+
 struct Map<'a> {
     input: &'a [u8],
     width: usize,
@@ -19,28 +21,25 @@ impl<'a> Map<'a> {
         self.input[index] - 48
     }
 
-    fn trail_head_score(&self, (x, y): (i32, i32), height: u8) -> i32 {
-        const DIRECTIONS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
-
+    fn trail_head_score(&self, (x, y): (i32, i32), prev_height: u8) -> i32 {
         let mut score = 0;
 
-        for (dir_x, dir_y) in DIRECTIONS {
-            let coord = (x + dir_x, y + dir_y);
-            if coord.0 >= 0
-                && coord.0 < self.width as i32
-                && coord.1 >= 0
-                && coord.1 < self.width as i32
-            {
-                let new_height = self.get(self.coord_to_index(coord));
-                if new_height == height + 1 {
-                    if new_height == 9 {
-                        score += 1;
-                    } else {
-                        score += self.trail_head_score(coord, new_height);
-                    }
-                }
-            }
+        if x < 0 || x > self.width as i32 || y < 0 || y > self.width as i32 {
+            return 0;
         }
+
+        let height = self.get(self.coord_to_index((x, y)));
+
+        if height == (prev_height + 1) {}
+
+        if height == 9 {
+            return 1;
+        }
+
+        return self.trail_head_score((x + DIRECTIONS[0].0, y + DIRECTIONS[0].1), height)
+            + self.trail_head_score((x + DIRECTIONS[0].0, y + DIRECTIONS[0].1), height)
+            + self.trail_head_score((x + DIRECTIONS[0].0, y + DIRECTIONS[0].1), height)
+            + self.trail_head_score((x + DIRECTIONS[0].0, y + DIRECTIONS[0].1), height);
 
         score
     }
@@ -79,6 +78,7 @@ pub fn part_one() -> i64 {
         if start == 0 {
             let coord = map.index_to_coord(i);
             // map.viz(coord);
+
             total_trail_head_score += map.trail_head_score(coord, 0);
         }
     }
