@@ -5,7 +5,7 @@ struct Map<'a> {
     width: usize,
 }
 
-impl<'a> Map<'a> {
+impl Map<'_> {
     fn coord_to_index(&self, (x, y): (i32, i32)) -> usize {
         (y * self.width as i32 + x) as usize
     }
@@ -21,27 +21,49 @@ impl<'a> Map<'a> {
         self.input[index] - 48
     }
 
-    fn trail_head_score(&self, (x, y): (i32, i32), prev_height: u8) -> i32 {
-        let mut score = 0;
-
-        if x < 0 || x > self.width as i32 || y < 0 || y > self.width as i32 {
+    fn trail_head_score(
+        &self,
+        (x, y): (i32, i32),
+        prev_height: i32,
+        visited_heads: &mut Vec<usize>,
+    ) -> i32 {
+        if x < 0 || x >= self.width as i32 || y < 0 || y >= self.width as i32 {
             return 0;
         }
 
-        let height = self.get(self.coord_to_index((x, y)));
+        let index = self.coord_to_index((x, y));
+        let height = self.get(index) as i32;
 
-        if height == (prev_height + 1) {}
+        if height == (prev_height + 1) {
+            if height == 9 {
+                if !visited_heads.contains(&index) {
+                    visited_heads.push(index);
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
 
-        if height == 9 {
-            return 1;
+            return self.trail_head_score(
+                (x + DIRECTIONS[0].0, y + DIRECTIONS[0].1),
+                height,
+                visited_heads,
+            ) + self.trail_head_score(
+                (x + DIRECTIONS[1].0, y + DIRECTIONS[1].1),
+                height,
+                visited_heads,
+            ) + self.trail_head_score(
+                (x + DIRECTIONS[2].0, y + DIRECTIONS[2].1),
+                height,
+                visited_heads,
+            ) + self.trail_head_score(
+                (x + DIRECTIONS[3].0, y + DIRECTIONS[3].1),
+                height,
+                visited_heads,
+            );
         }
 
-        return self.trail_head_score((x + DIRECTIONS[0].0, y + DIRECTIONS[0].1), height)
-            + self.trail_head_score((x + DIRECTIONS[0].0, y + DIRECTIONS[0].1), height)
-            + self.trail_head_score((x + DIRECTIONS[0].0, y + DIRECTIONS[0].1), height)
-            + self.trail_head_score((x + DIRECTIONS[0].0, y + DIRECTIONS[0].1), height);
-
-        score
+        0
     }
 
     fn viz(&self, pos: (i32, i32)) {
@@ -62,24 +84,27 @@ impl<'a> Map<'a> {
 }
 
 pub fn part_one() -> i64 {
-    let input = include_str!("../input_small.txt");
+    let input = include_str!("../input.txt");
     let width = input.find('\n').unwrap();
     let input = input.split('\n').collect::<String>();
     let input = input.as_bytes();
 
     let map = Map { input, width };
 
-    // map.viz();
-
     let mut total_trail_head_score = 0;
 
-    for i in 0..input.len() {
-        let start = input[i] - 48;
+    let mut visited_heads = Vec::new();
+
+    for (i, start) in input.iter().enumerate() {
+        let start = start - 48;
         if start == 0 {
             let coord = map.index_to_coord(i);
-            // map.viz(coord);
 
-            total_trail_head_score += map.trail_head_score(coord, 0);
+            visited_heads.clear();
+
+            let score = map.trail_head_score(coord, -1, &mut visited_heads);
+
+            total_trail_head_score += score;
         }
     }
 
