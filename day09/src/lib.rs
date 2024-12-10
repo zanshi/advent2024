@@ -142,23 +142,8 @@ fn better_defrag(fs: &mut [i32]) {
                 find_free_space_cursor += free_space_block_range.len();
 
                 // block too small, try to find another
-
-                // if let Some(next) = fs[find_free_space_cursor..]
-                //     .iter()
-                //     .position(|x| *x == i32::MAX)
-                // {
-                //     find_free_space_cursor += next;
-                // }
-
                 find_free_space_cursor =
                     unsafe { find_first_max_simd(fs, find_free_space_cursor, file_block_cursor) };
-
-                // while fs[find_free_space_cursor..find_free_space_cursor + 8]
-                //     .iter()
-                //     .all(|x| *x != i32::MAX)
-                // {
-                //     find_free_space_cursor += 8;
-                // }
 
                 while fs[find_free_space_cursor] != i32::MAX
                     && find_free_space_cursor < file_block_cursor
