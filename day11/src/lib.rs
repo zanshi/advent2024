@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::collections::HashSet;
 
 fn split_digit(number: i64) -> (i64, i64) {
     let mut divisor = 10;
@@ -59,20 +59,69 @@ fn blink(stones: &mut Vec<i64>) {
 }
 
 pub fn part_one() -> i64 {
-    let input = "8435 234 928434 14 0 7 92446 8992692";
+    // let input = "8435 234 928434 14 0 7 92446 8992692";
     // let input = "1 2024 1 0 9 9 2021976";
     // let input = "125 17";
-    // let input = "17";
+    // let input = "1";
+    let input = "8992692";
 
-    let stones = input
+    let mut stones = input
         .split_ascii_whitespace()
         .map(|x| x.parse::<i64>().unwrap())
         .collect::<Vec<i64>>();
 
+    println!("1");
+
+    for i in 0..35 {
+        let mut set = HashSet::new();
+
+        for stone in &stones {
+            set.insert(stone);
+        }
+
+        let previous_uniques = set.len() as i64;
+
+        let stones_len_before = stones.len();
+        blink(&mut stones);
+
+        print!("{}", stones.len());
+        print!(", diff: {}", stones.len() - stones_len_before);
+
+        let mut set = HashSet::new();
+
+        for stone in &stones {
+            set.insert(stone);
+        }
+
+        print!(", uniques: {}", set.len());
+        print!(", uniques diff: {}", set.len() as i64 - previous_uniques);
+
+        // if set.len() == 54 {
+        //     print!(", uniques: ");
+        //     for unique in set {
+        //         print!("{}, ", unique);
+        //     }
+
+        //     break;
+        // }
+
+        println!();
+
+        // println!();
+        // for stone in stones.iter() {
+        //     print!("{stone} ");
+        // }
+        // println!();
+
+        // for stone in stones2.iter() {
+        //     if stones.contains(stone)
+        // }
+    }
+
     let mut total_count = 0;
 
     for stone in stones {
-        total_count += blink_recursive(stone, 0, 25);
+        total_count += blink_recursive(stone, 0, 75);
     }
 
     total_count
@@ -80,6 +129,8 @@ pub fn part_one() -> i64 {
 
 pub fn part_two() -> i64 {
     let input = "8435 234 928434 14 0 7 92446 8992692";
+
+    // 0 -> 1 -> 2024 -> 20 24 -> 2 0 2 4 -> 4048 1 4048 8096 -> 40 48 2024 40 48 80 96 -> 4 0 4 8 4048 4 0 4 8 8 0 9 6 -> 16192
 
     let stones = input
         .split_ascii_whitespace()
