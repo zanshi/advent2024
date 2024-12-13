@@ -1,16 +1,9 @@
 const DIRECTIONS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
 
-enum Direction {
-    Up,
-    Right,
-    Down,
-    Left,
-}
-
 struct Region {
     area: usize,
     perimeter: usize,
-    sides: usize,
+    corners: usize,
 }
 
 struct Map<'a> {
@@ -117,46 +110,116 @@ impl Map<'_> {
 
             region.area += 1;
 
-            let prev_perimeter_count = region.perimeter;
-
             // up
-            self.find_region_cost(
+            let prev_perimeter_count = region.perimeter;
+            let prev_area = region.area;
+            self.find_region_cost_bulk_discount(
                 (x + DIRECTIONS[0].0, y + DIRECTIONS[0].1),
                 plant_type,
                 visited_plots,
                 region,
             );
 
-            // 1. Am I one plot from the perimeter?
-            // 2. Keep track how many plots in a row I've traversed in a straight line
-
-            if prev_perimeter_count != region.perimeter {
-                // hit the perimeter
-            }
+            let hit_up = prev_perimeter_count != region.perimeter && prev_area == region.area;
 
             // right
-            self.find_region_cost(
+            let prev_perimeter_count = region.perimeter;
+            let prev_area = region.area;
+
+            self.find_region_cost_bulk_discount(
                 (x + DIRECTIONS[1].0, y + DIRECTIONS[1].1),
                 plant_type,
                 visited_plots,
                 region,
             );
 
+            let hit_right = prev_perimeter_count != region.perimeter && prev_area == region.area;
+
             // down
-            self.find_region_cost(
+            let prev_perimeter_count = region.perimeter;
+            let prev_area = region.area;
+            self.find_region_cost_bulk_discount(
                 (x + DIRECTIONS[2].0, y + DIRECTIONS[2].1),
                 plant_type,
                 visited_plots,
                 region,
             );
 
+            let hit_down = prev_perimeter_count != region.perimeter && prev_area == region.area;
+
             // left
-            self.find_region_cost(
+            let prev_perimeter_count = region.perimeter;
+            let prev_area = region.area;
+            self.find_region_cost_bulk_discount(
                 (x + DIRECTIONS[3].0, y + DIRECTIONS[3].1),
                 plant_type,
                 visited_plots,
                 region,
             );
+
+            let hit_left = prev_perimeter_count != region.perimeter && prev_area == region.area;
+
+            // outer corners
+            if hit_right && hit_down {
+                region.corners += 1;
+
+                // println!("right-down");
+                // self.viz((x, y));
+            }
+
+            if hit_down && hit_left {
+                region.corners += 1;
+
+                // println!("down-left");
+
+                // self.viz((x, y));
+            }
+
+            if hit_left && hit_up {
+                region.corners += 1;
+                // println!("left-up");
+
+                // self.viz((x, y));
+            }
+
+            if hit_up && hit_right {
+                region.corners += 1;
+                // println!("up-right");
+
+                // self.viz((x, y));
+            }
+
+            // inner down-left corner
+            if !hit_left && !hit_down {
+                let diagonal_check_plant = self.get(self.coord_to_index(x - 1, y + 1));
+                if diagonal_check_plant != plant_type {
+                    region.corners += 1;
+                }
+            }
+
+            // inner up-right corner
+            if !hit_up && !hit_right {
+                let diagonal_check_plant = self.get(self.coord_to_index(x + 1, y - 1));
+                if diagonal_check_plant != plant_type {
+                    region.corners += 1;
+                }
+            }
+
+            // inner up-left corner
+            if !hit_up && !hit_left {
+                let diagonal_check_plant = self.get(self.coord_to_index(x - 1, y - 1));
+                if diagonal_check_plant != plant_type {
+                    region.corners += 1;
+                }
+            }
+
+            // inner down-right
+            if !hit_down && !hit_right {
+                let diagonal_check_plant = self.get(self.coord_to_index(x + 1, y + 1));
+                if diagonal_check_plant != plant_type {
+                    region.corners += 1;
+                }
+            }
         } else {
             region.perimeter += 1;
         }
@@ -203,7 +266,7 @@ pub fn part_one(input: &str) -> i64 {
             let mut region = Region {
                 area: 0,
                 perimeter: 0,
-                sides: 0,
+                corners: 0,
             };
 
             map.find_region_cost(coord, plant_type, &mut visited, &mut region);
@@ -241,12 +304,12 @@ pub fn part_two(input: &str) -> i64 {
             let mut region = Region {
                 area: 0,
                 perimeter: 0,
-                sides: 0,
+                corners: 0,
             };
 
             map.find_region_cost_bulk_discount(coord, plant_type, &mut visited, &mut region);
 
-            let region_fence_price = region.area * region.sides;
+            let region_fence_price = region.area * region.corners;
 
             total_fence_costs += region_fence_price;
         }
