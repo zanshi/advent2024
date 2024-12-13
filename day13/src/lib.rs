@@ -60,6 +60,7 @@ pub fn part_one(input: &str) -> i64 {
     // 23440 - wrong
     // 29521 - wrong
     // 28834 - wrong
+    // 36838
 
     let mut total_tokens = 0;
 
@@ -69,51 +70,12 @@ pub fn part_one(input: &str) -> i64 {
 
         let p = parse_input(a, b, prize);
 
-        // let mut a_presses = 0;
-        // let mut b_presses = 0;
-
-        // let mut x = 0;
-        // let mut y = 0;
-        // while x < p.prize.0 && y < p.prize.1 {
-        //     x += p.a.0;
-        //     y += p.a.1;
-
-        //     a_presses += 1;
-        //     b_presses += 1;
-        // }
-
-        // while a_presses < 100 {
-
-        // }
-
-        let a = Matrix2::new(p.a.0 as f64, p.b.0 as f64, p.a.1 as f64, p.b.1 as f64);
-
-        let b = Vector2::new(p.prize.0 as f64, p.prize.1 as f64);
-
-        let x = a.lu().solve(&b).unwrap();
-
-        let a_presses = x[0] as i64;
-        let b_presses = x[1] as i64;
-
-        if (x[0] - x[0].floor()).abs() < f64::EPSILON && (x[1] - x[1].floor()).abs() < f64::EPSILON
-        {
-            if p.a.0 * a_presses + p.b.0 * b_presses == p.prize.0
-                && p.a.1 * a_presses + p.b.1 * b_presses == p.prize.1
-            {
-                println!("Problem: {:?}", p);
-
-                println!("Adding {}, {}", x[0], x[1]);
-
-                if a_presses > 100 {
-                    println!("a > 100");
+        'outer: for i in 0..100 {
+            for j in 0..100 {
+                if p.a.0 * i + p.b.0 * j == p.prize.0 && p.a.1 * i + p.b.1 * j == p.prize.1 {
+                    total_tokens += 3 * i + j;
+                    break 'outer;
                 }
-
-                if b_presses > 100 {
-                    println!("b > 100");
-                }
-
-                let tokens = a_presses * 3 + b_presses as i64;
-                total_tokens += tokens;
             }
         }
 
