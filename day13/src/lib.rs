@@ -30,7 +30,7 @@ fn parse_input(a: &str, b: &str, prize: &str) -> Input {
         })
         .unwrap();
 
-    let pos_prize = prize
+    let prize = prize
         .strip_prefix("Prize: X=")
         .unwrap()
         .split_once(',')
@@ -42,11 +42,7 @@ fn parse_input(a: &str, b: &str, prize: &str) -> Input {
         })
         .unwrap();
 
-    Input {
-        a,
-        b,
-        prize: pos_prize,
-    }
+    Input { a, b, prize }
 }
 
 pub fn part_one(input: &str) -> i64 {
@@ -99,10 +95,12 @@ pub fn part_two(input: &str) -> i64 {
         p.prize.0 += 10000000000000;
         p.prize.1 += 10000000000000;
 
+        //
+
         let mut solved = false;
 
-        'outer: for i in (100000000000..10000000000000) {
-            for j in (100000000000..10000000000000) {
+        'outer: for i in (10000000000000..100000000000000) {
+            for j in (10000000000000..100000000000000) {
                 let pos_x = p.a.0 * i + p.b.0 * j;
                 let pos_y = p.a.1 * i + p.b.1 * j;
 
