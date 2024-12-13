@@ -1,5 +1,12 @@
 const DIRECTIONS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
 
+enum Direction {
+    Up,
+    Right,
+    Down,
+    Left,
+}
+
 struct Region {
     area: usize,
     perimeter: usize,
@@ -110,6 +117,9 @@ impl Map<'_> {
 
             region.area += 1;
 
+            let prev_perimeter_count = region.perimeter;
+
+            // up
             self.find_region_cost(
                 (x + DIRECTIONS[0].0, y + DIRECTIONS[0].1),
                 plant_type,
@@ -117,6 +127,14 @@ impl Map<'_> {
                 region,
             );
 
+            // 1. Am I one plot from the perimeter?
+            // 2. Keep track how many plots in a row I've traversed in a straight line
+
+            if prev_perimeter_count != region.perimeter {
+                // hit the perimeter
+            }
+
+            // right
             self.find_region_cost(
                 (x + DIRECTIONS[1].0, y + DIRECTIONS[1].1),
                 plant_type,
@@ -124,6 +142,7 @@ impl Map<'_> {
                 region,
             );
 
+            // down
             self.find_region_cost(
                 (x + DIRECTIONS[2].0, y + DIRECTIONS[2].1),
                 plant_type,
@@ -131,6 +150,7 @@ impl Map<'_> {
                 region,
             );
 
+            // left
             self.find_region_cost(
                 (x + DIRECTIONS[3].0, y + DIRECTIONS[3].1),
                 plant_type,
