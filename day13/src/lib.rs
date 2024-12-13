@@ -1,5 +1,3 @@
-use nalgebra::{Matrix2, Vector2};
-
 #[derive(Debug)]
 struct Input {
     a: (i64, i64),
@@ -58,29 +56,20 @@ pub fn part_one(input: &str) -> i64 {
 
         let p = parse_input(a, b, prize);
 
-        let a = Matrix2::new(p.a.0 as f64, p.b.0 as f64, p.a.1 as f64, p.b.1 as f64);
+        let a1 = p.a.0;
+        let a2 = p.a.1;
 
-        let det_a = a.determinant();
-        let mut d_x = a;
-        d_x.set_column(0, &Vector2::new(p.prize.0 as f64, p.prize.1 as f64));
+        let b1 = p.b.0;
+        let b2 = p.b.1;
 
-        let det_x = d_x.determinant();
+        let c1 = p.prize.0;
+        let c2 = p.prize.1;
 
-        let mut d_y = a;
-        d_y.set_column(1, &Vector2::new(p.prize.0 as f64, p.prize.1 as f64));
+        let x = (c1 * b2 - b1 * c2) / (a1 * b2 - b1 * a2);
+        let y = (a1 * c2 - c1 * a2) / (a1 * b2 - b1 * a2);
 
-        let det_y = d_y.determinant();
-
-        let x = det_x / det_a;
-        let y = det_y / det_a;
-
-        let a_presses = x as i64;
-        let b_presses = y as i64;
-
-        if p.a.0 * a_presses + p.b.0 * b_presses == p.prize.0
-            && p.a.1 * a_presses + p.b.1 * b_presses == p.prize.1
-        {
-            let tokens = a_presses * 3 + b_presses as i64;
+        if p.a.0 * x + p.b.0 * y == p.prize.0 && p.a.1 * x + p.b.1 * y == p.prize.1 {
+            let tokens = x * 3 + y;
             total_tokens += tokens;
         }
 
@@ -105,29 +94,29 @@ pub fn part_two(input: &str) -> i64 {
         p.prize.0 += 10000000000000;
         p.prize.1 += 10000000000000;
 
-        let a = Matrix2::new(p.a.0 as f64, p.b.0 as f64, p.a.1 as f64, p.b.1 as f64);
+        // 94 * a + 22 * b = 8400
+        // 34 * a + 67 * b = 5400
 
-        let det_a = a.determinant();
-        let mut d_x = a;
-        d_x.set_column(0, &Vector2::new(p.prize.0 as f64, p.prize.1 as f64));
+        // 94 * x + 22 * y = 8400
+        // 34 * x + 67 * y = 5400
 
-        let det_x = d_x.determinant();
+        // a1 * x + b1 * y = c1
+        // a2 * x + b2 * y = c2
 
-        let mut d_y = a;
-        d_y.set_column(1, &Vector2::new(p.prize.0 as f64, p.prize.1 as f64));
+        let a1 = p.a.0;
+        let a2 = p.a.1;
 
-        let det_y = d_y.determinant();
+        let b1 = p.b.0;
+        let b2 = p.b.1;
 
-        let x = det_x / det_a;
-        let y = det_y / det_a;
+        let c1 = p.prize.0;
+        let c2 = p.prize.1;
 
-        let a_presses = x as i64;
-        let b_presses = y as i64;
+        let x = (c1 * b2 - b1 * c2) / (a1 * b2 - b1 * a2);
+        let y = (a1 * c2 - c1 * a2) / (a1 * b2 - b1 * a2);
 
-        if p.a.0 * a_presses + p.b.0 * b_presses == p.prize.0
-            && p.a.1 * a_presses + p.b.1 * b_presses == p.prize.1
-        {
-            let tokens = a_presses * 3 + b_presses as i64;
+        if p.a.0 * x + p.b.0 * y == p.prize.0 && p.a.1 * x + p.b.1 * y == p.prize.1 {
+            let tokens = x * 3 + y;
             total_tokens += tokens;
         }
 
