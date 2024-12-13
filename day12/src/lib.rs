@@ -139,12 +139,45 @@ pub fn part_one(input: &str) -> i64 {
     total_fence_costs as i64
 }
 
-pub fn part_two() -> i64 {
-    0
+pub fn part_two(input: &str) -> i64 {
+    // regions
+    // area == number of garden plots
+    // perimeter == number of sides in a region that do not touch another plot in the same region
+    // price of fence for region = area * perimeter
+    // can have regions within regions
+
+    let width = input.find('\n').unwrap();
+    let input = input.split('\n').collect::<String>();
+    let input = input.as_bytes();
+
+    let mut visited = vec![false; input.len()];
+
+    let map = Map { input, width };
+
+    let mut total_fence_costs = 0;
+
+    for index in 0..map.input.len() {
+        if !visited[index] {
+            let coord = map.index_to_coord(index);
+            let plant_type = map.get(index);
+            let mut region = Region {
+                area: 0,
+                perimeter: 0,
+            };
+
+            map.find_region_cost(coord, plant_type, &mut visited, &mut region);
+
+            let region_fence_price = region.area * region.perimeter;
+
+            total_fence_costs += region_fence_price;
+        }
+    }
+
+    total_fence_costs as i64
 }
 
 #[test]
-fn small_1() {
+fn part_1_small_1() {
     let input = include_str!("../input_small_1.txt");
     let out = part_one(input);
 
@@ -152,7 +185,7 @@ fn small_1() {
 }
 
 #[test]
-fn small_2() {
+fn part_1_small_2() {
     let input = include_str!("../input_small_2.txt");
     let out = part_one(input);
 
@@ -160,7 +193,7 @@ fn small_2() {
 }
 
 #[test]
-fn small_3() {
+fn part_1_small_3() {
     let input = include_str!("../input_small_3.txt");
     let out = part_one(input);
 
@@ -168,7 +201,7 @@ fn small_3() {
 }
 
 #[test]
-fn input() {
+fn part_1_input() {
     let input = include_str!("../input.txt");
     let out = part_one(input);
 
