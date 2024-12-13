@@ -3,6 +3,7 @@ const DIRECTIONS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
 struct Region {
     area: usize,
     perimeter: usize,
+    sides: usize,
 }
 
 struct Map<'a> {
@@ -30,6 +31,62 @@ impl Map<'_> {
     }
 
     fn find_region_cost(
+        &self,
+        (x, y): (i32, i32),
+        last_plant_type: char,
+        visited_plots: &mut Vec<bool>,
+        region: &mut Region,
+    ) {
+        if x < 0 || x >= self.width as i32 || y < 0 || y >= self.width as i32 {
+            region.perimeter += 1;
+            return;
+        }
+
+        let index = self.coord_to_index(x, y);
+        let plant_type = self.get(index);
+
+        if plant_type == last_plant_type {
+            if visited_plots[index] {
+                return;
+            } else {
+                visited_plots[index] = true;
+            }
+
+            region.area += 1;
+
+            self.find_region_cost(
+                (x + DIRECTIONS[0].0, y + DIRECTIONS[0].1),
+                plant_type,
+                visited_plots,
+                region,
+            );
+
+            self.find_region_cost(
+                (x + DIRECTIONS[1].0, y + DIRECTIONS[1].1),
+                plant_type,
+                visited_plots,
+                region,
+            );
+
+            self.find_region_cost(
+                (x + DIRECTIONS[2].0, y + DIRECTIONS[2].1),
+                plant_type,
+                visited_plots,
+                region,
+            );
+
+            self.find_region_cost(
+                (x + DIRECTIONS[3].0, y + DIRECTIONS[3].1),
+                plant_type,
+                visited_plots,
+                region,
+            );
+        } else {
+            region.perimeter += 1;
+        }
+    }
+
+    fn find_region_cost_bulk_discount(
         &self,
         (x, y): (i32, i32),
         last_plant_type: char,
@@ -126,6 +183,7 @@ pub fn part_one(input: &str) -> i64 {
             let mut region = Region {
                 area: 0,
                 perimeter: 0,
+                sides: 0,
             };
 
             map.find_region_cost(coord, plant_type, &mut visited, &mut region);
@@ -163,11 +221,12 @@ pub fn part_two(input: &str) -> i64 {
             let mut region = Region {
                 area: 0,
                 perimeter: 0,
+                sides: 0,
             };
 
-            map.find_region_cost(coord, plant_type, &mut visited, &mut region);
+            map.find_region_cost_bulk_discount(coord, plant_type, &mut visited, &mut region);
 
-            let region_fence_price = region.area * region.perimeter;
+            let region_fence_price = region.area * region.sides;
 
             total_fence_costs += region_fence_price;
         }
@@ -206,4 +265,36 @@ fn part_1_input() {
     let out = part_one(input);
 
     assert_eq!(out, 1546338);
+}
+
+#[test]
+fn part_2_small_1() {
+    let input = include_str!("../input_small_1.txt");
+    let out = part_two(input);
+
+    assert_eq!(out, 80);
+}
+
+#[test]
+fn part_2_small_2() {
+    let input = include_str!("../input_small_2.txt");
+    let out = part_two(input);
+
+    assert_eq!(out, 436);
+}
+
+#[test]
+fn part_2_small_3() {
+    let input = include_str!("../input_small_3.txt");
+    let out = part_two(input);
+
+    assert_eq!(out, 1206);
+}
+
+#[test]
+fn part_2_input() {
+    let input = include_str!("../input.txt");
+    let out = part_two(input);
+
+    // assert_eq!(out, 1546338);
 }
