@@ -162,31 +162,18 @@ impl Map<'_> {
             // outer corners
             if hit_right && hit_down {
                 region.corners += 1;
-
-                // println!("right-down");
-                // self.viz((x, y));
             }
 
             if hit_down && hit_left {
                 region.corners += 1;
-
-                // println!("down-left");
-
-                // self.viz((x, y));
             }
 
             if hit_left && hit_up {
                 region.corners += 1;
-                // println!("left-up");
-
-                // self.viz((x, y));
             }
 
             if hit_up && hit_right {
                 region.corners += 1;
-                // println!("up-right");
-
-                // self.viz((x, y));
             }
 
             // inner down-left corner
@@ -225,21 +212,21 @@ impl Map<'_> {
         }
     }
 
-    fn viz(&self, pos: (i32, i32)) {
-        println!();
-        for y in 0..self.width {
-            println!();
-            for x in 0..self.width {
-                if pos.0 == x as i32 && pos.1 == y as i32 {
-                    print!("*");
-                } else {
-                    print!("{}", self.get(self.coord_to_index(x as i32, y as i32)));
-                }
-            }
-        }
-        println!();
-        println!();
-    }
+    // fn viz(&self, pos: (i32, i32)) {
+    //     println!();
+    //     for y in 0..self.width {
+    //         println!();
+    //         for x in 0..self.width {
+    //             if pos.0 == x as i32 && pos.1 == y as i32 {
+    //                 print!("*");
+    //             } else {
+    //                 print!("{}", self.get(self.coord_to_index(x as i32, y as i32)));
+    //             }
+    //         }
+    //     }
+    //     println!();
+    //     println!();
+    // }
 }
 
 pub fn part_one(input: &str) -> i64 {
