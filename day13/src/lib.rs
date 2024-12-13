@@ -45,8 +45,31 @@ fn parse_input(a: &str, b: &str, prize: &str) -> Input {
     Input { a, b, prize }
 }
 
+#[inline]
+fn solve(p: Input) -> i64 {
+    let a1 = p.a.0;
+    let a2 = p.a.1;
+
+    let b1 = p.b.0;
+    let b2 = p.b.1;
+
+    let c1 = p.prize.0;
+    let c2 = p.prize.1;
+
+    let det = a1 * b2 - b1 * a2;
+
+    let x = (c1 * b2 - b1 * c2) / det;
+    let y = (a1 * c2 - c1 * a2) / det;
+
+    if a1 * x + b1 * y == c1 && a2 * x + b2 * y == c2 {
+        x * 3 + y
+    } else {
+        0
+    }
+}
+
 pub fn part_one(input: &str) -> i64 {
-    let mut input = input.lines();
+    let mut input = input.split('\n');
 
     let mut total_tokens = 0;
 
@@ -56,22 +79,7 @@ pub fn part_one(input: &str) -> i64 {
 
         let p = parse_input(a, b, prize);
 
-        let a1 = p.a.0;
-        let a2 = p.a.1;
-
-        let b1 = p.b.0;
-        let b2 = p.b.1;
-
-        let c1 = p.prize.0;
-        let c2 = p.prize.1;
-
-        let x = (c1 * b2 - b1 * c2) / (a1 * b2 - b1 * a2);
-        let y = (a1 * c2 - c1 * a2) / (a1 * b2 - b1 * a2);
-
-        if p.a.0 * x + p.b.0 * y == p.prize.0 && p.a.1 * x + p.b.1 * y == p.prize.1 {
-            let tokens = x * 3 + y;
-            total_tokens += tokens;
-        }
+        total_tokens += solve(p);
 
         let Some(_empty_line) = input.next() else {
             break;
@@ -81,8 +89,17 @@ pub fn part_one(input: &str) -> i64 {
     total_tokens
 }
 
+// 94 * a + 22 * b = 8400
+// 34 * a + 67 * b = 5400
+
+// 94 * x + 22 * y = 8400
+// 34 * x + 67 * y = 5400
+
+// a1 * x + b1 * y = c1
+// a2 * x + b2 * y = c2
+
 pub fn part_two(input: &str) -> i64 {
-    let mut input = input.lines();
+    let mut input = input.split('\n');
 
     let mut total_tokens = 0;
 
@@ -94,31 +111,7 @@ pub fn part_two(input: &str) -> i64 {
         p.prize.0 += 10000000000000;
         p.prize.1 += 10000000000000;
 
-        // 94 * a + 22 * b = 8400
-        // 34 * a + 67 * b = 5400
-
-        // 94 * x + 22 * y = 8400
-        // 34 * x + 67 * y = 5400
-
-        // a1 * x + b1 * y = c1
-        // a2 * x + b2 * y = c2
-
-        let a1 = p.a.0;
-        let a2 = p.a.1;
-
-        let b1 = p.b.0;
-        let b2 = p.b.1;
-
-        let c1 = p.prize.0;
-        let c2 = p.prize.1;
-
-        let x = (c1 * b2 - b1 * c2) / (a1 * b2 - b1 * a2);
-        let y = (a1 * c2 - c1 * a2) / (a1 * b2 - b1 * a2);
-
-        if p.a.0 * x + p.b.0 * y == p.prize.0 && p.a.1 * x + p.b.1 * y == p.prize.1 {
-            let tokens = x * 3 + y;
-            total_tokens += tokens;
-        }
+        total_tokens += solve(p);
 
         let Some(_empty_line) = input.next() else {
             break;
