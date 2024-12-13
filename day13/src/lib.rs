@@ -1,3 +1,5 @@
+use nalgebra::{Matrix2, Vector2};
+
 #[derive(Debug)]
 struct Input {
     a: (i64, i64),
@@ -55,23 +57,31 @@ pub fn part_one(input: &str) -> i64 {
         let prize = input.next().unwrap();
 
         let p = parse_input(a, b, prize);
-        let mut solved = false;
 
-        'outer: for i in 0..100 {
-            for j in 0..100 {
-                if p.a.0 * i + p.b.0 * j == p.prize.0 && p.a.1 * i + p.b.1 * j == p.prize.1 {
-                    total_tokens += 3 * i + j;
+        let a = Matrix2::new(p.a.0 as f64, p.b.0 as f64, p.a.1 as f64, p.b.1 as f64);
 
-                    println!("Solved: {:?} with {} a presses and {} b presses", p, i, j);
-                    solved = true;
+        let det_a = a.determinant();
+        let mut d_x = a;
+        d_x.set_column(0, &Vector2::new(p.prize.0 as f64, p.prize.1 as f64));
 
-                    break 'outer;
-                }
-            }
-        }
+        let det_x = d_x.determinant();
 
-        if !solved {
-            println!("Prize not possible: {:?}", p);
+        let mut d_y = a;
+        d_y.set_column(1, &Vector2::new(p.prize.0 as f64, p.prize.1 as f64));
+
+        let det_y = d_y.determinant();
+
+        let x = det_x / det_a;
+        let y = det_y / det_a;
+
+        let a_presses = x as i64;
+        let b_presses = y as i64;
+
+        if p.a.0 * a_presses + p.b.0 * b_presses == p.prize.0
+            && p.a.1 * a_presses + p.b.1 * b_presses == p.prize.1
+        {
+            let tokens = a_presses * 3 + b_presses as i64;
+            total_tokens += tokens;
         }
 
         let Some(_empty_line) = input.next() else {
@@ -95,32 +105,30 @@ pub fn part_two(input: &str) -> i64 {
         p.prize.0 += 10000000000000;
         p.prize.1 += 10000000000000;
 
-        //
+        let a = Matrix2::new(p.a.0 as f64, p.b.0 as f64, p.a.1 as f64, p.b.1 as f64);
 
-        let mut solved = false;
+        let det_a = a.determinant();
+        let mut d_x = a;
+        d_x.set_column(0, &Vector2::new(p.prize.0 as f64, p.prize.1 as f64));
 
-        'outer: for i in (10000000000000..100000000000000) {
-            for j in (10000000000000..100000000000000) {
-                let pos_x = p.a.0 * i + p.b.0 * j;
-                let pos_y = p.a.1 * i + p.b.1 * j;
+        let det_x = d_x.determinant();
 
-                if pos_x > p.prize.0 || pos_y > p.prize.1 {
-                    continue;
-                }
+        let mut d_y = a;
+        d_y.set_column(1, &Vector2::new(p.prize.0 as f64, p.prize.1 as f64));
 
-                if pos_x == p.prize.0 && pos_y == p.prize.1 {
-                    total_tokens += 3 * i + j;
+        let det_y = d_y.determinant();
 
-                    println!("Solved: {:?} with {} a presses and {} b presses", p, i, j);
-                    solved = true;
+        let x = det_x / det_a;
+        let y = det_y / det_a;
 
-                    break 'outer;
-                }
-            }
-        }
+        let a_presses = x as i64;
+        let b_presses = y as i64;
 
-        if !solved {
-            println!("Prize not possible: {:?}", p);
+        if p.a.0 * a_presses + p.b.0 * b_presses == p.prize.0
+            && p.a.1 * a_presses + p.b.1 * b_presses == p.prize.1
+        {
+            let tokens = a_presses * 3 + b_presses as i64;
+            total_tokens += tokens;
         }
 
         let Some(_empty_line) = input.next() else {
@@ -148,17 +156,9 @@ fn part_1_input() {
 }
 
 #[test]
-fn part_2_small_1() {
-    let input = include_str!("../input_small_1.txt");
+fn part_2_input() {
+    let input = include_str!("../input.txt");
     let out = part_two(input);
 
-    // assert_eq!(out, 80);
+    assert_eq!(out, 83029436920891);
 }
-
-// #[test]
-// fn part_2_input() {
-//     let input = include_str!("../input.txt");
-//     let out = part_two(input);
-
-//     // assert_eq!(out, 1546338);
-// }
