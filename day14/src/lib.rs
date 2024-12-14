@@ -176,6 +176,14 @@ pub fn part_two(input: &str) -> i64 {
         if consecutive_ones {
             return i + 1;
         }
+
+        // code used to find it semi-manually...
+        // let safety_factor = calculate_safety_factor(&particles, &quadrants);
+
+        // if safety_factor < 200000000 {
+        //     println!("Iteration: {}", i);
+        //     visualize_particles_on_grid(&particles, grid);
+        // }
     }
 
     0
