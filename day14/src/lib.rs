@@ -105,10 +105,6 @@ fn calculate_safety_factor(particles: &[Particle], quadrants: &[Quadrant; 4]) ->
         }
     }
 
-    // for (i, score) in quadrants_score.iter().enumerate() {
-    //     println!("Quadrant {i} safety score: {}", score);
-    // }
-
     quadrants_score.into_iter().product()
 }
 
@@ -116,15 +112,6 @@ pub fn part_one(input: &str) -> i64 {
     let mut particles = parse_input(input);
 
     let grid = IVec2::new(101, 103);
-    // let grid = IVec2::new(11, 7);
-
-    // visualize_particles_on_grid(&particles, grid);
-
-    for _ in 0..100 {
-        tick(&mut particles, grid);
-    }
-
-    // visualize_particles_on_grid(&particles, grid);
 
     let quadrants = [
         Quadrant {
@@ -145,15 +132,53 @@ pub fn part_one(input: &str) -> i64 {
         },
     ];
 
+    // visualize_particles_on_grid(&particles, grid);
+
+    for _ in 0..100 {
+        tick(&mut particles, grid);
+        // visualize_particles_on_grid(&particles, grid);
+    }
+
+    // visualize_particles_on_grid(&particles, grid);
+
     calculate_safety_factor(&particles, &quadrants)
 }
 
+fn find_consecutive_ones(particles: &[Particle], grid: IVec2) -> bool {
+    let mut grid_cells = vec![0u8; (grid.x * grid.y) as usize];
+
+    for particle in particles {
+        let index = (particle.p.y * grid.x + particle.p.x) as usize;
+        grid_cells[index] += 1;
+    }
+
+    let search_pattern = &[1u8; 10];
+
+    for window in grid_cells.windows(10) {
+        if window == search_pattern {
+            return true;
+        }
+    }
+
+    false
+}
+
 pub fn part_two(input: &str) -> i64 {
-    let mut input = input.split('\n');
+    let mut particles = parse_input(input);
 
-    let mut safety_factor = 0;
+    let grid = IVec2::new(101, 103);
 
-    safety_factor
+    for i in 0..10000 {
+        tick(&mut particles, grid);
+
+        let consecutive_ones = find_consecutive_ones(&particles, grid);
+
+        if consecutive_ones {
+            return i + 1;
+        }
+    }
+
+    0
 }
 
 #[test]
@@ -169,5 +194,5 @@ fn part_2_input() {
     let input = include_str!("../input.txt");
     let out = part_two(input);
 
-    // assert_eq!(out, 83029436920891);
+    assert_eq!(out, 6620);
 }
