@@ -19,5 +19,5 @@ fn main() {
 
     println!("Part Two: {out}, time: {elapsed} us");
 
-    // assert_eq!(out, 83029436920891);
+    assert_eq!(out, 6620);
 }
