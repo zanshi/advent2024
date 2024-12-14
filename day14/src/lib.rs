@@ -68,27 +68,27 @@ fn tick(particles: &mut Vec<Particle>, grid: IVec2) {
     }
 }
 
-// fn visualize_particles_on_grid(particles: &[Particle], grid: IVec2) {
-//     println!();
-//     for y in 0..grid.y {
-//         for x in 0..grid.x {
-//             let mut robot_count = 0;
-//             for particle in particles {
-//                 if particle.p.x == x && particle.p.y == y {
-//                     robot_count += 1;
-//                 }
-//             }
-//             if robot_count > 0 {
-//                 print!("{}", robot_count);
-//             } else {
-//                 print!(".");
-//             }
-//         }
-//         println!();
-//     }
+fn visualize_particles_on_grid(particles: &[Particle], grid: IVec2) {
+    println!();
+    for y in 0..grid.y {
+        for x in 0..grid.x {
+            let mut robot_count = 0;
+            for particle in particles {
+                if particle.p.x == x && particle.p.y == y {
+                    robot_count += 1;
+                }
+            }
+            if robot_count > 0 {
+                print!("{}", robot_count);
+            } else {
+                print!(".");
+            }
+        }
+        println!();
+    }
 
-//     println!();
-// }
+    println!();
+}
 
 fn calculate_safety_factor(particles: &[Particle], quadrants: &[Quadrant; 4]) -> i64 {
     let mut quadrants_score = [0i64; 4];
@@ -144,18 +144,18 @@ pub fn part_one(input: &str) -> i64 {
     calculate_safety_factor(&particles, &quadrants)
 }
 
-fn find_consecutive_ones(particles: &[Particle], grid: IVec2) -> bool {
-    let mut grid_cells = vec![0u8; (grid.x * grid.y) as usize];
+fn find_consecutive_ones(particles: &[Particle], grid: IVec2, grid_cells: &mut [u8]) -> bool {
+    grid_cells.fill(0);
 
     for particle in particles {
         let index = (particle.p.y * grid.x + particle.p.x) as usize;
         grid_cells[index] += 1;
     }
 
-    let search_pattern = &[1u8; 10];
+    const SEARCH_PATTERN: &[u8; 8] = &[1u8; 8];
 
-    for window in grid_cells.windows(10) {
-        if window == search_pattern {
+    for window in grid_cells.windows(8) {
+        if window == SEARCH_PATTERN {
             return true;
         }
     }
@@ -168,12 +168,15 @@ pub fn part_two(input: &str) -> i64 {
 
     let grid = IVec2::new(101, 103);
 
+    let mut grid_cells = vec![0u8; (grid.x * grid.y) as usize];
+
     for i in 0..10000 {
         tick(&mut particles, grid);
 
-        let consecutive_ones = find_consecutive_ones(&particles, grid);
+        let consecutive_ones = find_consecutive_ones(&particles, grid, &mut grid_cells);
 
         if consecutive_ones {
+            // visualize_particles_on_grid(&particles, grid);
             return i + 1;
         }
 
