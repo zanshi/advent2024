@@ -26,21 +26,20 @@ impl From<u8> for Opcode {
     }
 }
 
-fn combo_operand(operand: u8, reg_a: i32, reg_b: i32, reg_c: i32) -> i32 {
+fn combo_operand(operand: u8, reg_a: i64, reg_b: i64, reg_c: i64) -> i64 {
     match operand {
-        0..=3 => operand as i32,
+        0..=3 => operand as i64,
         4 => reg_a,
         5 => reg_b,
         6 => reg_c,
-        7 => unreachable!(),
         _ => unreachable!(),
     }
 }
 
 struct Input {
-    reg_a: i32,
-    reg_b: i32,
-    reg_c: i32,
+    reg_a: i64,
+    reg_b: i64,
+    reg_c: i64,
     program: Vec<u8>,
 }
 
@@ -51,21 +50,21 @@ fn parse_input(input: &str) -> Input {
         .unwrap()
         .strip_prefix("Register A: ")
         .unwrap()
-        .parse::<i32>()
+        .parse::<i64>()
         .unwrap();
     let reg_b = input
         .next()
         .unwrap()
         .strip_prefix("Register B: ")
         .unwrap()
-        .parse::<i32>()
+        .parse::<i64>()
         .unwrap();
     let reg_c = input
         .next()
         .unwrap()
         .strip_prefix("Register C: ")
         .unwrap()
-        .parse::<i32>()
+        .parse::<i64>()
         .unwrap();
 
     let program = input
@@ -85,7 +84,12 @@ fn parse_input(input: &str) -> Input {
     }
 }
 
-fn run_program(input: &Input, check: bool) -> Vec<u8> {
+#[derive(Debug)]
+enum Error {
+    Wrong,
+}
+
+fn run_program(input: &Input, check: bool) -> Result<Vec<u8>, Error> {
     let mut reg_a = input.reg_a;
     let mut reg_b = input.reg_b;
     let mut reg_c = input.reg_c;
@@ -104,14 +108,14 @@ fn run_program(input: &Input, check: bool) -> Vec<u8> {
                 let combo = combo_operand(operand, reg_a, reg_b, reg_c);
 
                 let num = reg_a;
-                let denum = 2i32.pow(combo as u32);
+                let denum = 2i64.pow(combo as u32);
 
                 let res = num / denum;
 
                 reg_a = res;
             }
             Opcode::Bxl => {
-                let res = reg_b ^ operand as i32;
+                let res = reg_b ^ operand as i64;
 
                 reg_b = res;
             }
@@ -139,15 +143,21 @@ fn run_program(input: &Input, check: bool) -> Vec<u8> {
                 let val = combo_operand(operand, reg_a, reg_b, reg_c) % 8;
                 output.push(val as u8);
 
-                if output.len() > input.program.len() {
-                    return output;
+                if check {
+                    if output != input.program[..output.len()] {
+                        return Err(Error::Wrong);
+                    }
+
+                    if output.len() == input.program.len() {
+                        return Ok(output);
+                    }
                 }
             }
             Opcode::Bdv => {
                 let combo = combo_operand(operand, reg_a, reg_b, reg_c);
 
                 let num = reg_a;
-                let denum = 2i32.pow(combo as u32);
+                let denum = 2i64.pow(combo as _);
 
                 let res = num / denum;
 
@@ -157,7 +167,7 @@ fn run_program(input: &Input, check: bool) -> Vec<u8> {
                 let combo = combo_operand(operand, reg_a, reg_b, reg_c);
 
                 let num = reg_a;
-                let denum = 2i32.pow(combo as u32);
+                let denum = 2i64.pow(combo as _);
 
                 let res = num / denum;
 
@@ -168,13 +178,17 @@ fn run_program(input: &Input, check: bool) -> Vec<u8> {
         instruction_ptr += 2;
     }
 
-    output
+    if check {
+        return Err(Error::Wrong);
+    }
+
+    Ok(output)
 }
 
 pub fn part_one(input: &str) -> String {
     let input = parse_input(input);
 
-    let output = run_program(&input, false);
+    let output = run_program(&input, false).unwrap();
 
     let mut output_string = String::new();
 
@@ -186,21 +200,19 @@ pub fn part_one(input: &str) -> String {
     output_string
 }
 
-pub fn part_two(input: &str) -> i32 {
+pub fn part_two(input: &str) -> i64 {
     let mut input = parse_input(input);
     input.reg_a = 0;
 
     loop {
         input.reg_a += 1;
 
-        let output = run_program(&input, true);
-
-        if input.program == output {
-            break;
+        if let Ok(output) = run_program(&input, true) {
+            if input.program == output {
+                return input.reg_a;
+            }
         }
     }
-
-    input.reg_a
 }
 
 #[test]
