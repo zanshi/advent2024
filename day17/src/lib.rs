@@ -37,23 +37,30 @@ fn combo_operand(operand: u8, reg_a: i32, reg_b: i32, reg_c: i32) -> i32 {
     }
 }
 
-pub fn part_one(input: &str) -> String {
+struct Input {
+    reg_a: i32,
+    reg_b: i32,
+    reg_c: i32,
+    program: Vec<u8>,
+}
+
+fn parse_input(input: &str) -> Input {
     let mut input = input.split('\n');
-    let mut reg_a = input
+    let reg_a = input
         .next()
         .unwrap()
         .strip_prefix("Register A: ")
         .unwrap()
         .parse::<i32>()
         .unwrap();
-    let mut reg_b = input
+    let reg_b = input
         .next()
         .unwrap()
         .strip_prefix("Register B: ")
         .unwrap()
         .parse::<i32>()
         .unwrap();
-    let mut reg_c = input
+    let reg_c = input
         .next()
         .unwrap()
         .strip_prefix("Register C: ")
@@ -70,9 +77,23 @@ pub fn part_one(input: &str) -> String {
         .map(|s| s.parse::<u8>().unwrap())
         .collect::<Vec<u8>>();
 
+    Input {
+        reg_a,
+        reg_b,
+        reg_c,
+        program,
+    }
+}
+
+fn run_program(input: &Input, check: bool) -> Vec<u8> {
+    let mut reg_a = input.reg_a;
+    let mut reg_b = input.reg_b;
+    let mut reg_c = input.reg_c;
+    let program = &input.program;
+
     let mut instruction_ptr = 0;
 
-    let mut output: Vec<i32> = Vec::new();
+    let mut output: Vec<u8> = Vec::new();
 
     while instruction_ptr < (program.len() - 1) {
         let opcode = Opcode::from(program[instruction_ptr]);
@@ -116,7 +137,11 @@ pub fn part_one(input: &str) -> String {
             }
             Opcode::Out => {
                 let val = combo_operand(operand, reg_a, reg_b, reg_c) % 8;
-                output.push(val);
+                output.push(val as u8);
+
+                if output.len() > input.program.len() {
+                    return output;
+                }
             }
             Opcode::Bdv => {
                 let combo = combo_operand(operand, reg_a, reg_b, reg_c);
@@ -143,6 +168,14 @@ pub fn part_one(input: &str) -> String {
         instruction_ptr += 2;
     }
 
+    output
+}
+
+pub fn part_one(input: &str) -> String {
+    let input = parse_input(input);
+
+    let output = run_program(&input, false);
+
     let mut output_string = String::new();
 
     for i in output.iter().take(output.len() - 1) {
@@ -153,8 +186,21 @@ pub fn part_one(input: &str) -> String {
     output_string
 }
 
-pub fn part_two(input: &str) -> String {
-    String::new()
+pub fn part_two(input: &str) -> i32 {
+    let mut input = parse_input(input);
+    input.reg_a = 0;
+
+    loop {
+        input.reg_a += 1;
+
+        let output = run_program(&input, true);
+
+        if input.program == output {
+            break;
+        }
+    }
+
+    input.reg_a
 }
 
 #[test]
@@ -171,6 +217,14 @@ fn part_1_input() {
     let out = part_one(input);
 
     assert_eq!(out, "4,6,1,4,2,1,3,1,6");
+}
+
+#[test]
+fn part_2_small_input() {
+    let input = include_str!("../input_small_2.txt");
+    let out = part_two(input);
+
+    assert_eq!(out, 117440);
 }
 
 #[test]
