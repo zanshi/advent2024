@@ -14,10 +14,10 @@ fn main() {
     assert_eq!(out, 436);
 
     let now = Instant::now();
-    let out = part_two(input);
+    let out = part_two(input, 71);
     let elapsed = now.elapsed().as_micros();
 
-    println!("Part Two: {out}, time: {elapsed} us");
+    println!("Part Two: {out:?}, time: {elapsed} us");
 
-    // assert_eq!(out, 6620);
+    assert_eq!(out, (61, 50));
 }

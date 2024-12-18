@@ -115,6 +115,36 @@ pub fn part_one(input: &str, map_width: usize, number_of_bytes: usize) -> i32 {
         width: map_width,
     };
 
+    let mut lines = input.lines();
+
+    for _ in 0..number_of_bytes {
+        let line = lines.next().unwrap();
+        let mut split = line.split(',');
+        let x = split.next().unwrap().parse::<i32>().unwrap();
+        let y = split.next().unwrap().parse::<i32>().unwrap();
+
+        let coord = IVec2::new(x, y);
+        let index = map.coord_to_index(coord);
+
+        map.data[index] = b'#';
+    }
+
+    shortest_path_steps(
+        &map,
+        IVec2::new(0, 0),
+        IVec2::new((map_width - 1) as i32, (map_width - 1) as i32),
+    )
+}
+
+pub fn part_two(input: &str, map_width: usize) -> (i32, i32) {
+    let mut map = Map {
+        data: vec![b'.'; map_width * map_width],
+        width: map_width,
+    };
+
+    let start_pos = IVec2::new(0, 0);
+    let end_pos = IVec2::new((map_width - 1) as i32, (map_width - 1) as i32);
+
     let mut count = 0;
     for line in input.lines() {
         let mut split = line.split(',');
@@ -125,24 +155,19 @@ pub fn part_one(input: &str, map_width: usize, number_of_bytes: usize) -> i32 {
         let index = map.coord_to_index(coord);
 
         map.data[index] = b'#';
+
         count += 1;
 
-        if count >= number_of_bytes {
-            break;
+        if count >= 1024 {
+            let minimum_steps = shortest_path_steps(&map, start_pos, end_pos);
+
+            if minimum_steps == i32::MAX {
+                return (x, y);
+            }
         }
     }
 
-    // map.viz((0, 0));
-
-    shortest_path_steps(
-        &map,
-        IVec2::new(0, 0),
-        IVec2::new((map_width - 1) as i32, (map_width - 1) as i32),
-    )
-}
-
-pub fn part_two(_input: &str) -> i64 {
-    0
+    unreachable!()
 }
 
 #[test]
@@ -158,21 +183,21 @@ fn part_1_input() {
     let input = include_str!("../input.txt");
     let out = part_one(input, 71, 1024);
 
-    assert_eq!(out, "4,6,1,4,2,1,3,1,6");
+    assert_eq!(out, 436);
 }
 
 #[test]
 fn part_2_small_input() {
-    let input = include_str!("../input_small_2.txt");
-    let out = part_two(input);
+    let input = include_str!("../input_small_1.txt");
+    let out = part_two(input, 7);
 
-    assert_eq!(out, 117440);
+    assert_eq!(out, (6, 1));
 }
 
-#[test]
-fn part_2_input() {
-    let input = include_str!("../input.txt");
-    let out = part_two(input);
+// #[test]
+// fn part_2_input() {
+//     let input = include_str!("../input.txt");
+//     let out = part_two(input);
 
-    // assert_eq!(out, 6620);
-}
+//     assert_eq!(out, 6620);
+// }
