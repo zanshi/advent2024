@@ -1,5 +1,5 @@
 use glam::IVec2;
-use std::{cmp::Reverse, collections::BinaryHeap};
+use std::{cmp::Reverse, collections::BinaryHeap, i32};
 
 const DIRECTIONS: [IVec2; 4] = [
     IVec2::new(0, -1),
@@ -109,29 +109,30 @@ fn shortest_path_steps(map: &Map, start_pos: IVec2, end_pos: IVec2) -> i32 {
     minimum_steps
 }
 
-fn find_path(map: &Map, start_pos: IVec2, end_pos: IVec2) -> i32 {
+struct State {
+    steps: Vec<i32>,
+    in_open_set: Vec<u8>,
+    closed_set: Vec<u8>,
+}
+
+fn find_path(map: &Map, start_pos: IVec2, end_pos: IVec2, state: &mut State) -> i32 {
     let mut open_set: BinaryHeap<(i32, usize)> = BinaryHeap::new();
 
     let start_index = map.coord_to_index(start_pos);
     let end_index = map.coord_to_index(end_pos);
 
-    let mut steps = vec![i32::MAX; map.width * map.width];
-
-    let mut in_open_set = vec![0; map.width * map.width];
-    let mut closed_set = vec![0; map.width * map.width];
-
     open_set.push((0, start_index));
-    in_open_set[start_index] = 1;
-    steps[start_index] = 0;
+    state.in_open_set[start_index] = 1;
+    state.steps[start_index] = 0;
 
     while !open_set.is_empty() {
         let curr = open_set.pop().unwrap();
         let curr_steps = curr.0;
         let curr_index = curr.1;
 
-        in_open_set[curr_index] = 0;
+        state.in_open_set[curr_index] = 0;
 
-        closed_set[curr_index] = 1;
+        state.closed_set[curr_index] = 1;
 
         let curr_pos = map.index_to_coord(curr_index);
 
@@ -158,16 +159,16 @@ fn find_path(map: &Map, start_pos: IVec2, end_pos: IVec2) -> i32 {
                 continue;
             }
 
-            if closed_set[next_index] == 1 {
+            if state.closed_set[next_index] == 1 {
                 continue;
             }
 
-            if next_steps < steps[next_index] {
-                steps[next_index] = next_steps;
+            if next_steps < state.steps[next_index] {
+                state.steps[next_index] = next_steps;
 
-                if in_open_set[next_index] == 0 {
+                if state.in_open_set[next_index] == 0 {
                     open_set.push((next_steps, next_index));
-                    in_open_set[next_index] = 1;
+                    state.in_open_set[next_index] = 1;
                 }
             }
         }
@@ -212,7 +213,16 @@ pub fn part_two(input: &str, map_width: usize) -> (i32, i32) {
     let start_pos = IVec2::new(0, 0);
     let end_pos = IVec2::new((map_width - 1) as i32, (map_width - 1) as i32);
 
+    let mut state = State {
+        steps: vec![i32::MAX; map.width * map.width],
+        in_open_set: vec![0; map.width * map.width],
+        closed_set: vec![0; map.width * map.width],
+    };
+
     let mut count = 0;
+
+    let mut has_viable_path = false;
+
     for line in input.lines() {
         let mut split = line.split(',');
         let x = split.next().unwrap().parse::<i32>().unwrap();
@@ -221,14 +231,24 @@ pub fn part_two(input: &str, map_width: usize) -> (i32, i32) {
         let coord = IVec2::new(x, y);
         let index = map.coord_to_index(coord);
 
+        if state.closed_set[index] == 1 {
+            has_viable_path = false;
+        }
+
         map.data[index] = b'#';
 
         count += 1;
 
-        if count >= 1024 {
-            let minimum_steps = find_path(&map, start_pos, end_pos);
+        if !has_viable_path && count > 1024 {
+            state.steps.fill(i32::MAX);
+            state.in_open_set.fill(0);
+            state.closed_set.fill(0);
 
-            if minimum_steps == i32::MAX {
+            let minimum_steps = find_path(&map, start_pos, end_pos, &mut state);
+
+            if minimum_steps != i32::MAX {
+                has_viable_path = true;
+            } else {
                 return (x, y);
             }
         }
