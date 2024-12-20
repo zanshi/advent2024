@@ -334,7 +334,7 @@ pub fn part_one(input: &str) -> i32 {
     let mut faster_paths_count = 0;
 
     let mut was_here = vec![false; map.width * map.width];
-    let mut correct_path = vec![0; map.width * map.width];
+    let mut correct_path = vec![0i32; map.width * map.width];
     // let mut initial_path_len = 0;
 
     // let solved_maze = solve_maze(
@@ -349,6 +349,10 @@ pub fn part_one(input: &str) -> i32 {
     // assert_eq!(initial_path_len as usize + 1, path_len);
 
     // let path_len = correct_path.iter().fold(0i32, |acc, x| acc + (*x as i32));
+
+    for (i, index) in path.iter().enumerate() {
+        correct_path[*index] = (path.len() - i) as i32 - 1;
+    }
 
     let mut cheat_set = HashSet::with_hasher(FxBuildHasher);
     for (i, index) in path.iter().enumerate() {
@@ -373,29 +377,8 @@ pub fn part_one(input: &str) -> i32 {
                     let cheat_end_index = map.coord_to_index(after_wall_coord);
 
                     if cheat_set.insert((cheat_start_index, cheat_end_index)) {
-                        map.data[cheat_start_index] = b'.';
-
-                        let mut new_path_len = 0;
-                        solve_maze(
-                            &map,
-                            &mut was_here,
-                            &mut correct_path,
-                            &mut new_path_len,
-                            start_pos,
-                            coord,
-                        );
-
-                        was_here.fill(false);
-                        correct_path.fill(0);
-
-                        // let new_path_len = find_path_len(&map, &mut open_set, start_pos, coord) + i;
-                        // open_set.clear();
-
-                        let new_path_len = new_path_len + i as i32;
-
+                        let new_path_len = i as i32 + correct_path[cheat_end_index] + 2;
                         let saved_picoseconds = path_len as i32 - new_path_len;
-
-                        map.data[cheat_start_index] = b'#';
 
                         if saved_picoseconds >= 100 {
                             faster_paths_count += 1;
