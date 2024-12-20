@@ -1,4 +1,4 @@
-use std::{cmp::Reverse, collections::BinaryHeap};
+use std::{cmp::Reverse, collections::BinaryHeap, i32};
 
 use glam::IVec2;
 use rustc_hash::{FxBuildHasher, FxHashSet as HashSet};
@@ -78,44 +78,22 @@ impl Default for Node {
     }
 }
 
-fn find_path(map: &Map, open_set: &mut OpenSet, start_pos: IVec2, end_pos: IVec2) -> Vec<usize> {
-    let start_index = map.coord_to_index(start_pos);
+fn find_path(map: &Map, path_map: &mut [i32], start_pos: IVec2, end_pos: IVec2) -> Vec<usize> {
+    let mut curr_index = map.coord_to_index(start_pos);
     let end_index = map.coord_to_index(end_pos);
 
-    let mut visited = vec![Node::default(); map.width * map.width];
+    let mut path = Vec::new();
 
-    let mut steps = vec![i32::MAX; map.width * map.width];
+    let mut path_len = 0;
 
-    let start_node = Node {
-        index: start_index,
-        prev: usize::MAX,
-    };
-
-    open_set.push(Reverse((0, start_node)));
-    steps[start_index] = 0;
-
-    while !open_set.is_empty() {
-        let curr = open_set.pop().unwrap();
-        let curr_steps = curr.0 .0;
-        let curr_index = curr.0 .1.index;
+    loop {
+        path_map[curr_index] = path_len;
+        path.push(curr_index);
+        path_len += 1;
 
         if curr_index == end_index {
-            let mut reconstructed_path = Vec::new();
-
-            let mut node = curr.0 .1;
-
-            loop {
-                reconstructed_path.push(node.index);
-
-                if node.prev == usize::MAX {
-                    return reconstructed_path;
-                }
-
-                node = visited[node.prev];
-            }
+            return path;
         }
-
-        visited[curr_index] = curr.0 .1;
 
         let curr_pos = map.index_to_coord(curr_index);
 
@@ -126,29 +104,17 @@ fn find_path(map: &Map, open_set: &mut OpenSet, start_pos: IVec2, end_pos: IVec2
                 continue;
             }
 
-            if map.get_from_coord(next_pos) == b'#' {
+            let next_index = map.coord_to_index(next_pos);
+
+            if map.get_from_coord(next_pos) == b'#' || path_map[next_index] != i32::MAX {
                 continue;
             }
 
-            let next_index = map.coord_to_index(next_pos);
+            curr_index = map.coord_to_index(next_pos);
 
-            let next_steps = curr_steps + 1;
-
-            if next_steps < steps[next_index] {
-                steps[next_index] = next_steps;
-
-                open_set.push(Reverse((
-                    next_steps,
-                    Node {
-                        index: next_index,
-                        prev: curr_index,
-                    },
-                )));
-            }
+            break;
         }
     }
-
-    unreachable!()
 }
 
 fn solve_maze(
@@ -214,20 +180,15 @@ pub fn part_one(input: &str) -> i32 {
     let start_pos = map.index_to_coord(start_index);
     let end_pos = map.index_to_coord(end_index);
 
-    let mut open_set: OpenSet = BinaryHeap::new();
-    let path = find_path(&map, &mut open_set, start_pos, end_pos);
+    let mut path_map = vec![i32::MAX; map.width * map.width];
 
-    let path_len = path.len();
+    let path = find_path(&map, &mut path_map, start_pos, end_pos);
+    let path_len = path.len() as i32;
 
     let mut faster_paths_count = 0;
 
-    let mut correct_path = vec![0i32; map.width * map.width];
+    let mut cheat_set = HashSet::with_capacity_and_hasher(20000, FxBuildHasher);
 
-    for (i, index) in path.iter().enumerate() {
-        correct_path[*index] = (path.len() - i) as i32;
-    }
-
-    let mut cheat_set = HashSet::with_hasher(FxBuildHasher);
     for (i, index) in path.iter().enumerate() {
         let coord = map.index_to_coord(*index);
 
@@ -249,8 +210,8 @@ pub fn part_one(input: &str) -> i32 {
                     let cheat_start_index = map.coord_to_index(next_pos);
                     let cheat_end_index = map.coord_to_index(after_wall_coord);
 
-                    if cheat_set.insert((cheat_start_index, cheat_end_index)) {
-                        let new_path_len = i as i32 + correct_path[cheat_end_index] + 2;
+                    if cheat_set.insert((cheat_start_index as u16, cheat_end_index as u16)) {
+                        let new_path_len = i as i32 + (path_len - path_map[cheat_end_index]) + 2;
                         let saved_picoseconds = path_len as i32 - new_path_len;
 
                         if saved_picoseconds >= 100 {
@@ -266,69 +227,70 @@ pub fn part_one(input: &str) -> i32 {
 }
 
 pub fn part_two(input: &str) -> i32 {
-    let width = input.find('\n').unwrap();
-    let input = input.split('\n').collect::<String>();
+    // let width = input.find('\n').unwrap();
+    // let input = input.split('\n').collect::<String>();
 
-    let start_index = input.find('S').unwrap();
-    let end_index = input.find('E').unwrap();
+    // let start_index = input.find('S').unwrap();
+    // let end_index = input.find('E').unwrap();
 
-    let map = Map {
-        data: input.as_bytes(),
-        width,
-    };
+    // let map = Map {
+    //     data: input.as_bytes(),
+    //     width,
+    // };
 
-    let start_pos = map.index_to_coord(start_index);
-    let end_pos = map.index_to_coord(end_index);
+    // let start_pos = map.index_to_coord(start_index);
+    // let end_pos = map.index_to_coord(end_index);
 
-    let mut open_set: OpenSet = BinaryHeap::new();
-    let path = find_path(&map, &mut open_set, start_pos, end_pos);
+    // let path = find_path(&map, start_pos, end_pos);
 
-    let path_len = path.len();
+    // let path_len = path.len();
 
-    let mut faster_paths_count = 0;
+    // let mut faster_paths_count = 0;
 
-    let mut correct_path = vec![0i32; map.width * map.width];
+    // let mut correct_path = vec![0i32; map.width * map.width];
 
-    for (i, index) in path.iter().enumerate() {
-        correct_path[*index] = (path.len() - i) as i32;
-    }
+    // for (i, index) in path.iter().enumerate() {
+    //     correct_path[*index] = (path.len() - i) as i32;
+    // }
 
-    let mut cheat_set = HashSet::with_hasher(FxBuildHasher);
-    for (i, index) in path.iter().enumerate() {
-        let coord = map.index_to_coord(*index);
+    // let mut cheat_set = HashSet::with_hasher(FxBuildHasher);
+    // for (i, index) in path.iter().enumerate() {
+    //     let coord = map.index_to_coord(*index);
 
-        for direction in DIRECTIONS {
-            let next_pos = coord + direction;
+    //     for direction in DIRECTIONS {
+    //         let next_pos = coord + direction;
 
-            if !map.is_inside(next_pos) {
-                continue;
-            }
+    //         if !map.is_inside(next_pos) {
+    //             continue;
+    //         }
 
-            if map.get_from_coord(next_pos) == b'#' {
-                let after_wall_coord = next_pos + direction;
+    //         if map.get_from_coord(next_pos) == b'#' {
+    //             let after_wall_coord = next_pos + direction;
 
-                if !map.is_inside(after_wall_coord) {
-                    continue;
-                }
+    //             if !map.is_inside(after_wall_coord) {
+    //                 continue;
+    //             }
 
-                if map.get_from_coord(after_wall_coord) != b'#' {
-                    let cheat_start_index = map.coord_to_index(next_pos);
-                    let cheat_end_index = map.coord_to_index(after_wall_coord);
+    //             if map.get_from_coord(after_wall_coord) != b'#' {
+    //                 let cheat_start_index = map.coord_to_index(next_pos);
+    //                 let cheat_end_index = map.coord_to_index(after_wall_coord);
 
-                    if cheat_set.insert((cheat_start_index, cheat_end_index)) {
-                        let new_path_len = i as i32 + correct_path[cheat_end_index] + 2;
-                        let saved_picoseconds = path_len as i32 - new_path_len;
+    //                 if cheat_set.insert((cheat_start_index, cheat_end_index)) {
+    //                     let new_path_len = i as i32 + correct_path[cheat_end_index] + 2;
+    //                     let saved_picoseconds = path_len as i32 - new_path_len;
 
-                        if saved_picoseconds >= 100 {
-                            faster_paths_count += 1;
-                        }
-                    }
-                }
-            }
-        }
-    }
+    //                     if saved_picoseconds >= 100 {
+    //                         faster_paths_count += 1;
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
-    faster_paths_count
+    // faster_paths_count
+
+    0
 }
 
 #[test]
