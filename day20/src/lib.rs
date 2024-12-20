@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use glam::IVec2;
 use rustc_hash::{FxBuildHasher, FxHashSet as HashSet};
 
@@ -56,21 +58,6 @@ impl Map<'_> {
     // }
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
-struct Node {
-    index: usize,
-    prev: usize,
-}
-
-impl Default for Node {
-    fn default() -> Self {
-        Self {
-            index: usize::MAX,
-            prev: usize::MAX,
-        }
-    }
-}
-
 fn find_path(map: &Map, path_map: &mut [i32], start_pos: IVec2, end_pos: IVec2) -> Vec<usize> {
     let mut curr_index = map.coord_to_index(start_pos);
     let end_index = map.coord_to_index(end_pos);
@@ -104,6 +91,67 @@ fn find_path(map: &Map, path_map: &mut [i32], start_pos: IVec2, end_pos: IVec2) 
             break;
         }
     }
+}
+
+fn breadth_first_search(
+    map: &Map,
+    visited: &mut [bool],
+    queue: &mut VecDeque<(usize, i32)>,
+    cheat_set: &mut HashSet<(i32, i32)>,
+    path_map: &[i32],
+    start_index: usize,
+    path_index: usize,
+    path_len: i32,
+) -> i32 {
+    let cheat_len = 0;
+    visited[start_index] = true;
+    queue.push_back((start_index, cheat_len));
+
+    let mut valid_cheats = 0;
+
+    while let Some((current_index, cheat_len)) = queue.pop_front() {
+        if cheat_len > 20 {
+            continue;
+        }
+
+        let pos = map.index_to_coord(current_index);
+
+        if map.get_from_coord(pos) != b'#'
+            && cheat_set.insert((start_index as i32, current_index as i32))
+        {
+            let after_start = path_map[current_index] > path_index as i32;
+
+            if after_start {
+                let new_path_len =
+                    path_index as i32 + (path_len - path_map[current_index]) + cheat_len;
+
+                if let Some(saved_picoseconds) = path_len.checked_sub(new_path_len) {
+                    if saved_picoseconds >= 100 {
+                        valid_cheats += 1;
+                    }
+                }
+            }
+        }
+
+        {
+            for direction in DIRECTIONS {
+                let next_pos = pos + direction;
+
+                if map.is_outside(next_pos) {
+                    continue;
+                }
+
+                let next_index = map.coord_to_index(next_pos);
+
+                if !visited[next_index] {
+                    visited[next_index] = true;
+                    queue.push_back((next_index, cheat_len + 1));
+                }
+            }
+        }
+    }
+
+    valid_cheats
 }
 
 fn solve_maze(
@@ -243,6 +291,10 @@ pub fn part_one(input: &str) -> i32 {
 }
 
 pub fn part_two(input: &str) -> i32 {
+    // 451688 -too low
+    // 508291- too low
+    // 1139964 - too low
+
     let width = input.find('\n').unwrap();
     let input = input.split('\n').collect::<String>();
 
@@ -260,45 +312,31 @@ pub fn part_two(input: &str) -> i32 {
     let mut path_map = vec![i32::MAX; map.width * map.width];
     let mut cheat_set = HashSet::with_capacity_and_hasher(20000, FxBuildHasher);
 
-    let mut was_here = vec![false; map.width * map.width];
-
     let path = find_path(&map, &mut path_map, start_pos, end_pos);
     let path_len = path.len() as i32;
 
     let mut faster_paths_count = 0;
 
-    for (i, index) in path.iter().enumerate() {
-        let coord = map.index_to_coord(*index);
+    let mut visited = vec![false; map.data.len()];
 
-        for direction in DIRECTIONS.iter() {
-            let next_pos = coord + direction;
+    let mut queue = VecDeque::with_capacity(1024);
 
-            if map.get_from_coord(next_pos) == b'#' {
-                // find all start -> end combos in this wall section
+    for (distance_on_path, index) in path.iter().enumerate() {
+        let valid_cheats = breadth_first_search(
+            &map,
+            &mut visited,
+            &mut queue,
+            &mut cheat_set,
+            &path_map,
+            *index,
+            distance_on_path,
+            path_len,
+        );
 
-                let cheat_len = 0;
-                let cheat_start_index = map.coord_to_index(next_pos);
+        visited.fill(false);
+        queue.clear();
 
-                let mut valid_cheats = 0;
-
-                solve_maze(
-                    &map,
-                    &mut cheat_set,
-                    &mut was_here,
-                    &path_map,
-                    cheat_len,
-                    cheat_start_index,
-                    next_pos,
-                    &mut valid_cheats,
-                    i,
-                    path_len,
-                );
-
-                was_here.fill(false);
-
-                faster_paths_count += valid_cheats;
-            }
-        }
+        faster_paths_count += valid_cheats;
     }
 
     faster_paths_count
@@ -313,17 +351,9 @@ fn part_1_input() {
 }
 
 #[test]
-fn part_2_small_input() {
-    let input = include_str!("../input_small_1.txt");
+fn part_2_input() {
+    let input = include_str!("../input.txt");
     let out = part_two(input);
 
-    assert_eq!(out, 0);
+    assert_eq!(out, 982474);
 }
-
-// #[test]
-// fn part_2_input() {
-//     let input = include_str!("../input.txt");
-//     let out = part_two(input);
-
-//     assert_eq!(out, 6620);
-// }
