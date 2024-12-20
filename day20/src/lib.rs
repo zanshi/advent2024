@@ -41,46 +41,23 @@ impl Map {
             || coord.y < 0)
     }
 
-    // #[inline(always)]
-    // fn get(&self, index: usize) -> u8 {
-    //     *self.data.get(index).unwrap()
-    // }
-
-    // fn viz(&self, pos: (i32, i32)) {
+    // fn viz(&self) {
     //     for y in 0..self.width {
     //         println!();
     //         for x in 0..self.width {
     //             let coord = IVec2::new(x as i32, y as i32);
-    //             let c = self.get_from_coord(coord) as char;
-
-    //             if pos.0 == x as i32 && pos.1 == y as i32 {
-    //                 print!("O");
+    //             let c = if self.get_from_coord(coord) == 1 {
+    //                 '*'
     //             } else {
-    //                 print!("{}", c);
-    //             }
+    //                 '.'
+    //             };
+
+    //             print!("{}", c);
     //         }
     //     }
     //     println!();
     //     println!();
     // }
-
-    fn viz(&self) {
-        for y in 0..self.width {
-            println!();
-            for x in 0..self.width {
-                let coord = IVec2::new(x as i32, y as i32);
-                let c = if self.get_from_coord(coord) == 1 {
-                    '*'
-                } else {
-                    '.'
-                };
-
-                print!("{}", c);
-            }
-        }
-        println!();
-        println!();
-    }
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
@@ -96,80 +73,6 @@ impl Default for Node {
             prev: usize::MAX,
         }
     }
-}
-
-fn find_path_len(map: &Map, open_set: &mut OpenSet, start_pos: IVec2, end_pos: IVec2) -> usize {
-    let start_index = map.coord_to_index(start_pos);
-    let end_index = map.coord_to_index(end_pos);
-
-    let mut visited = vec![Node::default(); map.width * map.width];
-
-    let mut steps = vec![i32::MAX; map.width * map.width];
-
-    let start_node = Node {
-        index: start_index,
-        prev: usize::MAX,
-    };
-
-    open_set.push(Reverse((0, start_node)));
-    steps[start_index] = 0;
-
-    visited[start_index] = start_node;
-
-    while !open_set.is_empty() {
-        let curr = open_set.pop().unwrap();
-        let curr_steps = curr.0 .0;
-        let curr_index = curr.0 .1.index;
-
-        if curr_index == end_index {
-            let mut node = curr.0 .1;
-
-            let mut path_len = 0;
-
-            loop {
-                path_len += 1;
-
-                if node.prev == usize::MAX {
-                    return path_len;
-                }
-
-                node = visited[node.prev];
-            }
-        }
-
-        visited[curr_index] = curr.0 .1;
-
-        let curr_pos = map.index_to_coord(curr_index);
-
-        for direction in DIRECTIONS {
-            let next_pos = curr_pos + direction;
-
-            if !map.is_inside(next_pos) {
-                continue;
-            }
-
-            if map.get_from_coord(next_pos) == b'#' {
-                continue;
-            }
-
-            let next_index = map.coord_to_index(next_pos);
-            let next_steps = curr_steps + 1;
-
-            if next_steps < steps[next_index] {
-                steps[next_index] = next_steps;
-
-                open_set.push(Reverse((
-                    next_steps,
-                    Node {
-                        index: next_index,
-                        prev: curr_index,
-                    },
-                )));
-            }
-        }
-    }
-
-    unreachable!()
 }
 
 fn find_path(map: &Map, open_set: &mut OpenSet, start_pos: IVec2, end_pos: IVec2) -> Vec<usize> {
@@ -293,21 +196,6 @@ fn solve_maze(
     false
 }
 
-#[derive(Clone, Copy)]
-struct Cheat {
-    start: usize,
-    end: usize,
-}
-
-impl Default for Cheat {
-    fn default() -> Self {
-        Self {
-            start: usize::MAX,
-            end: usize::MAX,
-        }
-    }
-}
-
 type OpenSet = BinaryHeap<Reverse<(i32, Node)>>;
 
 pub fn part_one(input: &str) -> i32 {
@@ -321,7 +209,7 @@ pub fn part_one(input: &str) -> i32 {
     let start_index = input.iter().position(|x| *x == b'S').unwrap();
     let end_index = input.iter().position(|x| *x == b'E').unwrap();
 
-    let mut map = Map { data: input, width };
+    let map = Map { data: input, width };
 
     let start_pos = map.index_to_coord(start_index);
     let end_pos = map.index_to_coord(end_index);
