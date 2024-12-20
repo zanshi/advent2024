@@ -1,5 +1,5 @@
 use glam::IVec2;
-use std::{cmp::Reverse, collections::BinaryHeap};
+use std::{cmp::Reverse, collections::BinaryHeap, usize};
 
 const DIRECTIONS: [IVec2; 4] = [
     IVec2::new(0, -1),
@@ -56,27 +56,63 @@ impl Map<'_> {
     // }
 }
 
-fn shortest_path_steps(map: &Map, start_pos: IVec2, end_pos: IVec2) -> i32 {
-    let mut open_set: BinaryHeap<Reverse<(i32, usize)>> = BinaryHeap::new();
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+struct Node {
+    index: usize,
+    prev: usize,
+}
+
+impl Default for Node {
+    fn default() -> Self {
+        Self {
+            index: usize::MAX,
+            prev: usize::MAX,
+        }
+    }
+}
+
+fn shortest_path_steps(map: &Map, start_pos: IVec2, end_pos: IVec2) -> Vec<usize> {
+    let mut open_set: BinaryHeap<Reverse<(i32, Node)>> = BinaryHeap::new();
 
     let start_index = map.coord_to_index(start_pos);
     let end_index = map.coord_to_index(end_pos);
 
+    let mut visited = vec![Node::default(); map.width * map.width];
+
     let mut steps = vec![i32::MAX; map.width * map.width];
 
-    open_set.push(Reverse((0, start_index)));
+    let start_node = Node {
+        index: start_index,
+        prev: usize::MAX,
+    };
+
+    open_set.push(Reverse((0, start_node)));
     steps[start_index] = 0;
 
-    let mut minimum_steps = i32::MAX;
+    visited[start_index] = start_node;
 
     while !open_set.is_empty() {
         let curr = open_set.pop().unwrap();
         let curr_steps = curr.0 .0;
-        let curr_index = curr.0 .1;
+        let curr_index = curr.0 .1.index;
 
         if curr_index == end_index {
-            minimum_steps = minimum_steps.min(curr_steps);
+            let mut reconstructed_path = Vec::new();
+
+            let mut node = curr.0 .1;
+
+            loop {
+                reconstructed_path.push(node.index);
+
+                if node.prev == usize::MAX {
+                    return reconstructed_path;
+                }
+
+                node = visited[node.prev];
+            }
         }
+
+        visited[curr_index] = curr.0 .1;
 
         let curr_pos = map.index_to_coord(curr_index);
 
@@ -101,80 +137,18 @@ fn shortest_path_steps(map: &Map, start_pos: IVec2, end_pos: IVec2) -> i32 {
             if next_steps < steps[next_index] {
                 steps[next_index] = next_steps;
 
-                open_set.push(Reverse((next_steps, next_index)));
+                open_set.push(Reverse((
+                    next_steps,
+                    Node {
+                        index: next_index,
+                        prev: curr_index,
+                    },
+                )));
             }
         }
     }
 
-    minimum_steps
-}
-
-struct State {
-    steps: Vec<i32>,
-    in_open_set: Vec<u8>,
-    closed_set: Vec<u8>,
-}
-
-fn find_path(map: &Map, start_pos: IVec2, end_pos: IVec2, state: &mut State) -> i32 {
-    let mut open_set: BinaryHeap<(i32, usize)> = BinaryHeap::new();
-
-    let start_index = map.coord_to_index(start_pos);
-    let end_index = map.coord_to_index(end_pos);
-
-    open_set.push((0, start_index));
-    state.in_open_set[start_index] = 1;
-    state.steps[start_index] = 0;
-
-    while !open_set.is_empty() {
-        let curr = open_set.pop().unwrap();
-        let curr_steps = curr.0;
-        let curr_index = curr.1;
-
-        state.in_open_set[curr_index] = 0;
-
-        state.closed_set[curr_index] = 1;
-
-        let curr_pos = map.index_to_coord(curr_index);
-
-        for direction in DIRECTIONS {
-            let next_pos = curr_pos + direction;
-
-            if next_pos.x >= map.width as i32
-                || next_pos.x < 0
-                || next_pos.y >= map.width as i32
-                || next_pos.y < 0
-            {
-                continue;
-            }
-
-            let next_index = map.coord_to_index(next_pos);
-
-            let next_steps = curr_steps + 1;
-
-            if next_index == end_index {
-                return next_steps;
-            }
-
-            if map.get_from_coord(next_pos) == b'#' {
-                continue;
-            }
-
-            if state.closed_set[next_index] == 1 {
-                continue;
-            }
-
-            if next_steps < state.steps[next_index] {
-                state.steps[next_index] = next_steps;
-
-                if state.in_open_set[next_index] == 0 {
-                    open_set.push((next_steps, next_index));
-                    state.in_open_set[next_index] = 1;
-                }
-            }
-        }
-    }
-
-    i32::MAX
+    unreachable!()
 }
 
 pub fn part_one(input: &str) -> i32 {
@@ -187,11 +161,17 @@ pub fn part_one(input: &str) -> i32 {
 
     let map = Map { data: input, width };
 
-    shortest_path_steps(
+    let mut cheat_map = vec![(usize::MAX, usize::MAX); input.len()];
+
+    let path = shortest_path_steps(
         &map,
         map.index_to_coord(start_index),
         map.index_to_coord(end_index),
-    )
+    );
+
+    println!("{:?}", path);
+
+    0
 }
 
 pub fn part_two(input: &str) -> i32 {
