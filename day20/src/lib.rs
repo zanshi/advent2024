@@ -187,12 +187,12 @@ pub fn part_one(input: &str) -> i32 {
 
     let mut faster_paths_count = 0;
 
-    let mut cheat_set = HashSet::with_capacity_and_hasher(20000, FxBuildHasher);
+    let mut cheat_map = vec![0i32; map.width * map.width];
 
     for (i, index) in path.iter().enumerate() {
         let coord = map.index_to_coord(*index);
 
-        for direction in DIRECTIONS {
+        for (dir_idx, direction) in DIRECTIONS.iter().enumerate() {
             let next_pos = coord + direction;
 
             if !map.is_inside(next_pos) {
@@ -210,13 +210,21 @@ pub fn part_one(input: &str) -> i32 {
                     let cheat_start_index = map.coord_to_index(next_pos);
                     let cheat_end_index = map.coord_to_index(after_wall_coord);
 
-                    if cheat_set.insert((cheat_start_index as u16, cheat_end_index as u16)) {
-                        let new_path_len = i as i32 + (path_len - path_map[cheat_end_index]) + 2;
-                        let saved_picoseconds = path_len as i32 - new_path_len;
+                    let cheat = cheat_map[cheat_start_index];
 
-                        if saved_picoseconds >= 100 {
-                            faster_paths_count += 1;
-                        }
+                    let dir_mask = 1 << (dir_idx + 1);
+
+                    if cheat & dir_mask > 0 {
+                        continue;
+                    }
+
+                    cheat_map[cheat_start_index] |= dir_mask;
+
+                    let new_path_len = i as i32 + (path_len - path_map[cheat_end_index]) + 2;
+                    let saved_picoseconds = path_len as i32 - new_path_len;
+
+                    if saved_picoseconds >= 100 {
+                        faster_paths_count += 1;
                     }
                 }
             }
@@ -227,69 +235,6 @@ pub fn part_one(input: &str) -> i32 {
 }
 
 pub fn part_two(input: &str) -> i32 {
-    // let width = input.find('\n').unwrap();
-    // let input = input.split('\n').collect::<String>();
-
-    // let start_index = input.find('S').unwrap();
-    // let end_index = input.find('E').unwrap();
-
-    // let map = Map {
-    //     data: input.as_bytes(),
-    //     width,
-    // };
-
-    // let start_pos = map.index_to_coord(start_index);
-    // let end_pos = map.index_to_coord(end_index);
-
-    // let path = find_path(&map, start_pos, end_pos);
-
-    // let path_len = path.len();
-
-    // let mut faster_paths_count = 0;
-
-    // let mut correct_path = vec![0i32; map.width * map.width];
-
-    // for (i, index) in path.iter().enumerate() {
-    //     correct_path[*index] = (path.len() - i) as i32;
-    // }
-
-    // let mut cheat_set = HashSet::with_hasher(FxBuildHasher);
-    // for (i, index) in path.iter().enumerate() {
-    //     let coord = map.index_to_coord(*index);
-
-    //     for direction in DIRECTIONS {
-    //         let next_pos = coord + direction;
-
-    //         if !map.is_inside(next_pos) {
-    //             continue;
-    //         }
-
-    //         if map.get_from_coord(next_pos) == b'#' {
-    //             let after_wall_coord = next_pos + direction;
-
-    //             if !map.is_inside(after_wall_coord) {
-    //                 continue;
-    //             }
-
-    //             if map.get_from_coord(after_wall_coord) != b'#' {
-    //                 let cheat_start_index = map.coord_to_index(next_pos);
-    //                 let cheat_end_index = map.coord_to_index(after_wall_coord);
-
-    //                 if cheat_set.insert((cheat_start_index, cheat_end_index)) {
-    //                     let new_path_len = i as i32 + correct_path[cheat_end_index] + 2;
-    //                     let saved_picoseconds = path_len as i32 - new_path_len;
-
-    //                     if saved_picoseconds >= 100 {
-    //                         faster_paths_count += 1;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
-    // faster_paths_count
-
     0
 }
 
