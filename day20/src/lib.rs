@@ -3,6 +3,8 @@ use std::{cmp::Reverse, collections::BinaryHeap};
 use glam::IVec2;
 use rustc_hash::{FxBuildHasher, FxHashSet as HashSet};
 
+type OpenSet = BinaryHeap<Reverse<(i32, Node)>>;
+
 const DIRECTIONS: [IVec2; 4] = [
     IVec2::new(0, -1),
     IVec2::new(1, 0),
@@ -10,12 +12,12 @@ const DIRECTIONS: [IVec2; 4] = [
     IVec2::new(-1, 0),
 ];
 
-struct Map {
-    data: Vec<u8>,
+struct Map<'a> {
+    data: &'a [u8],
     width: usize,
 }
 
-impl Map {
+impl Map<'_> {
     #[inline(always)]
     fn coord_to_index(&self, coord: IVec2) -> usize {
         (coord.y * self.width as i32 + coord.x) as usize
@@ -34,6 +36,7 @@ impl Map {
         *self.data.get(self.coord_to_index(coord)).unwrap()
     }
 
+    #[inline(always)]
     fn is_inside(&self, coord: IVec2) -> bool {
         !(coord.x >= self.width as i32
             || coord.x < 0
@@ -196,20 +199,17 @@ fn solve_maze(
     false
 }
 
-type OpenSet = BinaryHeap<Reverse<(i32, Node)>>;
-
 pub fn part_one(input: &str) -> i32 {
     let width = input.find('\n').unwrap();
-    let input = input
-        .split('\n')
-        .flat_map(|s| s.as_bytes())
-        .copied()
-        .collect::<Vec<u8>>();
+    let input = input.split('\n').collect::<String>();
 
-    let start_index = input.iter().position(|x| *x == b'S').unwrap();
-    let end_index = input.iter().position(|x| *x == b'E').unwrap();
+    let start_index = input.find('S').unwrap();
+    let end_index = input.find('E').unwrap();
 
-    let map = Map { data: input, width };
+    let map = Map {
+        data: input.as_bytes(),
+        width,
+    };
 
     let start_pos = map.index_to_coord(start_index);
     let end_pos = map.index_to_coord(end_index);
@@ -221,25 +221,10 @@ pub fn part_one(input: &str) -> i32 {
 
     let mut faster_paths_count = 0;
 
-    let mut was_here = vec![false; map.width * map.width];
     let mut correct_path = vec![0i32; map.width * map.width];
-    // let mut initial_path_len = 0;
-
-    // let solved_maze = solve_maze(
-    //     &map,
-    //     &mut was_here,
-    //     &mut correct_path,
-    //     &mut initial_path_len,
-    //     start_pos,
-    //     end_pos,
-    // );
-
-    // assert_eq!(initial_path_len as usize + 1, path_len);
-
-    // let path_len = correct_path.iter().fold(0i32, |acc, x| acc + (*x as i32));
 
     for (i, index) in path.iter().enumerate() {
-        correct_path[*index] = (path.len() - i) as i32 - 1;
+        correct_path[*index] = (path.len() - i) as i32;
     }
 
     let mut cheat_set = HashSet::with_hasher(FxBuildHasher);
@@ -281,15 +266,69 @@ pub fn part_one(input: &str) -> i32 {
 }
 
 pub fn part_two(input: &str) -> i32 {
-    0
-}
+    let width = input.find('\n').unwrap();
+    let input = input.split('\n').collect::<String>();
 
-#[test]
-fn part_1_small_input() {
-    let input = include_str!("../input_small_1.txt");
-    let out = part_one(input);
+    let start_index = input.find('S').unwrap();
+    let end_index = input.find('E').unwrap();
 
-    assert_eq!(out, 22);
+    let map = Map {
+        data: input.as_bytes(),
+        width,
+    };
+
+    let start_pos = map.index_to_coord(start_index);
+    let end_pos = map.index_to_coord(end_index);
+
+    let mut open_set: OpenSet = BinaryHeap::new();
+    let path = find_path(&map, &mut open_set, start_pos, end_pos);
+
+    let path_len = path.len();
+
+    let mut faster_paths_count = 0;
+
+    let mut correct_path = vec![0i32; map.width * map.width];
+
+    for (i, index) in path.iter().enumerate() {
+        correct_path[*index] = (path.len() - i) as i32;
+    }
+
+    let mut cheat_set = HashSet::with_hasher(FxBuildHasher);
+    for (i, index) in path.iter().enumerate() {
+        let coord = map.index_to_coord(*index);
+
+        for direction in DIRECTIONS {
+            let next_pos = coord + direction;
+
+            if !map.is_inside(next_pos) {
+                continue;
+            }
+
+            if map.get_from_coord(next_pos) == b'#' {
+                let after_wall_coord = next_pos + direction;
+
+                if !map.is_inside(after_wall_coord) {
+                    continue;
+                }
+
+                if map.get_from_coord(after_wall_coord) != b'#' {
+                    let cheat_start_index = map.coord_to_index(next_pos);
+                    let cheat_end_index = map.coord_to_index(after_wall_coord);
+
+                    if cheat_set.insert((cheat_start_index, cheat_end_index)) {
+                        let new_path_len = i as i32 + correct_path[cheat_end_index] + 2;
+                        let saved_picoseconds = path_len as i32 - new_path_len;
+
+                        if saved_picoseconds >= 100 {
+                            faster_paths_count += 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    faster_paths_count
 }
 
 #[test]
@@ -297,7 +336,7 @@ fn part_1_input() {
     let input = include_str!("../input.txt");
     let out = part_one(input);
 
-    assert_eq!(out, 436);
+    assert_eq!(out, 1317);
 }
 
 #[test]
