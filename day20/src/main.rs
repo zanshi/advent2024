@@ -3,7 +3,7 @@ use std::time::Instant;
 use day20::{part_one, part_two};
 
 fn main() {
-    let input = include_str!("../input_small_1.txt");
+    let input = include_str!("../input.txt");
 
     let now = Instant::now();
     let out = part_one(input); // change
@@ -11,7 +11,7 @@ fn main() {
 
     println!("Part One: {out}, time: {elapsed} us");
 
-    assert_eq!(out, 436);
+    assert_eq!(out, 1317);
 
     let now = Instant::now();
     let out = part_two(input);
