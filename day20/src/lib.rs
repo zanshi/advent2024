@@ -1,9 +1,5 @@
-use std::{cmp::Reverse, collections::BinaryHeap, i32};
-
 use glam::IVec2;
 use rustc_hash::{FxBuildHasher, FxHashSet as HashSet};
-
-type OpenSet = BinaryHeap<Reverse<(i32, Node)>>;
 
 const DIRECTIONS: [IVec2; 4] = [
     IVec2::new(0, -1),
@@ -37,11 +33,8 @@ impl Map<'_> {
     }
 
     #[inline(always)]
-    fn is_inside(&self, coord: IVec2) -> bool {
-        !(coord.x >= self.width as i32
-            || coord.x < 0
-            || coord.y >= self.width as i32
-            || coord.y < 0)
+    fn is_outside(&self, coord: IVec2) -> bool {
+        coord.x >= self.width as i32 || coord.x < 0 || coord.y >= self.width as i32 || coord.y < 0
     }
 
     // fn viz(&self) {
@@ -100,10 +93,6 @@ fn find_path(map: &Map, path_map: &mut [i32], start_pos: IVec2, end_pos: IVec2) 
         for direction in DIRECTIONS {
             let next_pos = curr_pos + direction;
 
-            if !map.is_inside(next_pos) {
-                continue;
-            }
-
             let next_index = map.coord_to_index(next_pos);
 
             if map.get_from_coord(next_pos) == b'#' || path_map[next_index] != i32::MAX {
@@ -119,47 +108,71 @@ fn find_path(map: &Map, path_map: &mut [i32], start_pos: IVec2, end_pos: IVec2) 
 
 fn solve_maze(
     map: &Map,
+    cheat_map: &mut HashSet<(i32, i32)>,
     was_here: &mut [bool],
-    correct_path: &mut [u8],
-    correct_path_len: &mut i32,
+    path_map: &[i32],
+    cheat_len: i32,
+    start_index: usize,
     pos: IVec2,
-    end_pos: IVec2,
+    valid_cheats: &mut i32,
+    path_index: usize,
+    path_len: i32,
 ) -> bool {
-    if pos == end_pos {
-        return true;
-    }
-    if !map.is_inside(pos) {
+    if cheat_len > 20 {
         return false;
     }
 
     let index = map.coord_to_index(pos);
-    if map.get_from_coord(pos) == b'#' || was_here[index] {
+
+    if map.is_outside(pos) {
+        return false;
+    }
+
+    if was_here[index] {
         return false;
     }
 
     was_here[index] = true;
 
+    // exited wall
+    if map.get_from_coord(pos) != b'#' {
+        if cheat_map.insert((start_index as i32, index as i32)) {
+            let after_start = path_map[index] > path_index as i32;
+
+            if after_start {
+                let new_path_len = path_index as i32 + (path_len - path_map[index]) + cheat_len;
+                if let Some(saved_picoseconds) = path_len.checked_sub(new_path_len) {
+                    if saved_picoseconds >= 50 {
+                        *valid_cheats += 1;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
     for direction in DIRECTIONS {
         let next_pos = pos + direction;
 
-        if !map.is_inside(pos) {
+        if map.is_outside(pos) {
             continue;
         }
 
-        let next_index = map.coord_to_index(next_pos);
-
-        if solve_maze(
+        solve_maze(
             map,
+            cheat_map,
             was_here,
-            correct_path,
-            correct_path_len,
+            path_map,
+            cheat_len + 1,
+            start_index,
             next_pos,
-            end_pos,
-        ) {
-            *correct_path_len += 1;
-            correct_path[next_index] = 1;
-            return true;
-        }
+            valid_cheats,
+            path_index,
+            path_len,
+        );
     }
 
     false
@@ -181,13 +194,12 @@ pub fn part_one(input: &str) -> i32 {
     let end_pos = map.index_to_coord(end_index);
 
     let mut path_map = vec![i32::MAX; map.width * map.width];
+    let mut cheat_map = vec![0i32; map.width * map.width];
 
     let path = find_path(&map, &mut path_map, start_pos, end_pos);
     let path_len = path.len() as i32;
 
     let mut faster_paths_count = 0;
-
-    let mut cheat_map = vec![0i32; map.width * map.width];
 
     for (i, index) in path.iter().enumerate() {
         let coord = map.index_to_coord(*index);
@@ -195,14 +207,10 @@ pub fn part_one(input: &str) -> i32 {
         for (dir_idx, direction) in DIRECTIONS.iter().enumerate() {
             let next_pos = coord + direction;
 
-            if !map.is_inside(next_pos) {
-                continue;
-            }
-
             if map.get_from_coord(next_pos) == b'#' {
                 let after_wall_coord = next_pos + direction;
 
-                if !map.is_inside(after_wall_coord) {
+                if map.is_outside(after_wall_coord) {
                     continue;
                 }
 
@@ -235,7 +243,65 @@ pub fn part_one(input: &str) -> i32 {
 }
 
 pub fn part_two(input: &str) -> i32 {
-    0
+    let width = input.find('\n').unwrap();
+    let input = input.split('\n').collect::<String>();
+
+    let start_index = input.find('S').unwrap();
+    let end_index = input.find('E').unwrap();
+
+    let map = Map {
+        data: input.as_bytes(),
+        width,
+    };
+
+    let start_pos = map.index_to_coord(start_index);
+    let end_pos = map.index_to_coord(end_index);
+
+    let mut path_map = vec![i32::MAX; map.width * map.width];
+    let mut cheat_set = HashSet::with_capacity_and_hasher(20000, FxBuildHasher);
+
+    let mut was_here = vec![false; map.width * map.width];
+
+    let path = find_path(&map, &mut path_map, start_pos, end_pos);
+    let path_len = path.len() as i32;
+
+    let mut faster_paths_count = 0;
+
+    for (i, index) in path.iter().enumerate() {
+        let coord = map.index_to_coord(*index);
+
+        for direction in DIRECTIONS.iter() {
+            let next_pos = coord + direction;
+
+            if map.get_from_coord(next_pos) == b'#' {
+                // find all start -> end combos in this wall section
+
+                let cheat_len = 0;
+                let cheat_start_index = map.coord_to_index(next_pos);
+
+                let mut valid_cheats = 0;
+
+                solve_maze(
+                    &map,
+                    &mut cheat_set,
+                    &mut was_here,
+                    &path_map,
+                    cheat_len,
+                    cheat_start_index,
+                    next_pos,
+                    &mut valid_cheats,
+                    i,
+                    path_len,
+                );
+
+                was_here.fill(false);
+
+                faster_paths_count += valid_cheats;
+            }
+        }
+    }
+
+    faster_paths_count
 }
 
 #[test]
